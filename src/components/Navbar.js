@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-import { FaShoppingCart, FaBars, FaTimes} from 'react-icons/fa';
+import { FaShoppingCart, FaBars, FaTimes, FaSearch } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import SearchBar from './SearchBar';
 import WishlistButton from './WishlistButton';
@@ -12,13 +12,22 @@ const Navbar = () => {
   const { isDarkMode } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  
+  // Refs for handling clicks
+  const navbarRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+  const searchButtonRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
+      setIsSmallMobile(window.innerWidth <= 480);
       if (window.innerWidth > 768) {
         setIsMenuOpen(false);
+        setShowMobileSearch(false);
       }
     };
 
@@ -35,57 +44,147 @@ const Navbar = () => {
     };
   }, []);
 
+  // Handle click outside to close menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close mobile menu if clicking outside
+      if (isMenuOpen && 
+          navbarRef.current && 
+          !navbarRef.current.contains(event.target) && 
+          mobileMenuRef.current && 
+          !mobileMenuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+      
+      // Close mobile search if clicking outside
+      if (showMobileSearch && 
+          navbarRef.current && 
+          !navbarRef.current.contains(event.target) && 
+          !event.target.closest('.search-bar-container')) {
+        setShowMobileSearch(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen, showMobileSearch]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen]);
+
+  const handleLinkClick = () => {
+    setIsMenuOpen(false);
+    setShowMobileSearch(false);
+  };
+
+  const toggleMobileSearch = (e) => {
+    e.stopPropagation();
+    setShowMobileSearch(!showMobileSearch);
+    if (!showMobileSearch) {
+      setIsMenuOpen(false);
+    }
+  };
+
+  // Get responsive logo size
+  const getLogoSize = () => {
+    if (isSmallMobile) return '30px';
+    return '40px';
+  };
+
+  // Get responsive padding
+  const getNavbarPadding = () => {
+    if (isSmallMobile) return '0.4rem 0';
+    if (isScrolled) return '0.5rem 0';
+    return '0.75rem 0';
+  };
+
+  // Fixed styles with NO shorthand/longhand conflicts
   const themeStyles = {
     navbar: {
       backgroundColor: isDarkMode 
         ? (isScrolled ? '#1a1a1a' : '#2d2d2d') 
         : (isScrolled ? '#f5346b' : '#f5346b'),
       boxShadow: isDarkMode 
-        ? '0 2px 4px rgba(0,0,0,0.3)' 
-        : '0 2px 4px rgba(0,0,0,0.1)',
+        ? '0 2px 8px rgba(0,0,0,0.3)' 
+        : '0 2px 8px rgba(0,0,0,0.1)',
       position: 'sticky',
       top: 0,
       zIndex: 1000,
       transition: 'all 0.3s ease',
-      padding: isScrolled ? '0.5rem 0' : '0.75rem 0'
+      padding: getNavbarPadding(),
+      width: '100%'
+    },
+    navContainer: {
+      maxWidth: '1400px',
+      margin: '0 auto',
+      padding: isSmallMobile ? '0 0.5rem' : '0 1rem',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: isSmallMobile ? '0.25rem' : '1rem',
+      position: 'relative',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     logo: {
-      height: '40px',
+      height: getLogoSize(),
       width: 'auto',
+      maxWidth: isSmallMobile ? '100px' : '120px',
       display: 'block',
       filter: 'brightness(0) invert(1)',
-      transition: 'all 0.3s ease'
+      transition: 'all 0.3s ease',
+      objectFit: 'contain'
     },
     logoContainer: {
       display: 'flex',
       alignItems: 'center',
-      textDecoration: 'none'
+      textDecoration: 'none',
+      flexShrink: 0,
+      maxWidth: isSmallMobile ? '100px' : '150px'
+    },
+    // Desktop Navigation Links
+    navLinks: {
+      display: isMobile ? 'none' : 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginLeft: '1rem'
     },
     link: {
       color: '#ffffff',
       textDecoration: 'none',
-      fontSize: '1rem',
-      padding: '0.5rem 1rem',
+      fontSize: isSmallMobile ? '0.9rem' : '1rem',
+      padding: isSmallMobile ? '0.4rem 0.6rem' : '0.5rem 1rem',
       borderRadius: '4px',
       transition: 'all 0.3s ease',
       fontWeight: '500',
+      whiteSpace: 'nowrap',
+      backgroundColor: 'transparent',
       ':hover': {
         backgroundColor: isDarkMode ? '#404040' : '#ff4d7a',
-        transform: 'translateY(-2px)'
       }
     },
     cartLink: {
       color: '#ffffff',
       textDecoration: 'none',
-      fontSize: '1.2rem',
+      fontSize: isSmallMobile ? '1rem' : '1.2rem',
       position: 'relative',
-      padding: '0.5rem',
+      padding: isSmallMobile ? '0.4rem' : '0.5rem',
       display: 'flex',
       alignItems: 'center',
+      justifyContent: 'center',
       transition: 'all 0.3s ease',
-      ':hover': {
-        transform: 'scale(1.1)'
-      }
+      flexShrink: 0,
+      backgroundColor: 'transparent',
     },
     cartCount: {
       position: 'absolute',
@@ -95,112 +194,342 @@ const Navbar = () => {
       color: '#ffffff',
       borderRadius: '50%',
       padding: '2px 6px',
-      fontSize: '0.8rem',
-      minWidth: '18px',
-      textAlign: 'center'
+      fontSize: isSmallMobile ? '0.6rem' : '0.8rem',
+      minWidth: '16px',
+      height: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center',
+      fontWeight: '600',
     },
     menuButton: {
-      display: isMobile ? 'block' : 'none',
+      display: isMobile ? 'flex' : 'none',
+      alignItems: 'center',
+      justifyContent: 'center',
       background: 'none',
-      border: 'none',
-      fontSize: '1.5rem',
+      fontSize: isSmallMobile ? '1.2rem' : '1.5rem',
       cursor: 'pointer',
       color: '#ffffff',
-      padding: '0.5rem',
+      padding: isSmallMobile ? '0.3rem' : '0.5rem',
       transition: 'all 0.3s ease',
-      ':hover': {
-        transform: 'scale(1.1)'
-      }
+      borderRadius: '4px',
+      flexShrink: 0,
+      minWidth: isSmallMobile ? '32px' : '40px',
+      minHeight: isSmallMobile ? '32px' : '40px',
+      border: 'none'
     },
-    navLinks: {
-      display: 'flex',
-      gap: '0.5rem',
+    mobileSearchButton: {
+      display: isMobile ? 'flex' : 'none',
       alignItems: 'center',
-      flexDirection: isMobile && isMenuOpen ? 'column' : 'row',
-      position: isMobile && isMenuOpen ? 'absolute' : 'static',
-      top: isMobile && isMenuOpen ? '70px' : 'auto',
+      justifyContent: 'center',
+      background: 'none',
+      fontSize: isSmallMobile ? '1rem' : '1.2rem',
+      cursor: 'pointer',
+      color: '#ffffff',
+      padding: isSmallMobile ? '0.3rem' : '0.5rem',
+      transition: 'all 0.3s ease',
+      borderRadius: '4px',
+      flexShrink: 0,
+      minWidth: isSmallMobile ? '32px' : '40px',
+      minHeight: isSmallMobile ? '32px' : '40px',
+      border: 'none'
+    },
+    rightSection: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: isSmallMobile ? '0.1rem' : '0.5rem',
+      flexShrink: 0
+    },
+    desktopSearchWrapper: {
+      flex: 1,
+      maxWidth: '500px',
+      margin: '0 1rem',
+      minWidth: '200px'
+    },
+    mobileSearchWrapper: {
+      width: '100%',
+      padding: '0.75rem',
+      boxSizing: 'border-box',
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      backgroundColor: isDarkMode ? '#2d2d2d' : '#f5346b',
+      zIndex: 1001,
+      boxShadow: isDarkMode ? '0 4px 8px rgba(0,0,0,0.3)' : '0 4px 8px rgba(0,0,0,0.1)',
+      borderBottomLeftRadius: '8px',
+      borderBottomRightRadius: '8px',
+      border: 'none'
+    },
+    mobileMenu: {
+      position: 'fixed',
+      top: isSmallMobile ? '55px' : '65px',
       left: 0,
       right: 0,
+      bottom: 0,
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f5346b',
-      padding: isMobile && isMenuOpen ? '1rem' : '0',
-      boxShadow: isMobile && isMenuOpen 
-        ? (isDarkMode ? '0 4px 8px rgba(0,0,0,0.3)' : '0 4px 8px rgba(0,0,0,0.1)') 
-        : 'none',
-      width: isMobile && isMenuOpen ? '100%' : 'auto',
-      zIndex: 999
+      display: isMenuOpen ? 'flex' : 'none',
+      flexDirection: 'column',
+      padding: isSmallMobile ? '1rem' : '2rem',
+      zIndex: 999,
+      overflowY: 'auto',
+      animation: 'slideDown 0.3s ease',
+      boxSizing: 'border-box',
+      borderTopWidth: '1px',
+      borderTopStyle: 'solid',
+      borderTopColor: isDarkMode ? '#404040' : '#ff6b8a',
+      borderBottomWidth: '0',
+      borderLeftWidth: '0',
+      borderRightWidth: '0'
     },
-    desktopLinks: {
+    mobileNavLinks: {
       display: 'flex',
-      gap: '0.5rem',
-      alignItems: 'center'
+      flexDirection: 'column',
+      gap: isSmallMobile ? '0.5rem' : '1rem',
+      marginBottom: isSmallMobile ? '1rem' : '2rem'
+    },
+    mobileLink: {
+      color: '#ffffff',
+      textDecoration: 'none',
+      fontSize: isSmallMobile ? '1rem' : '1.2rem',
+      padding: isSmallMobile ? '0.6rem' : '1rem',
+      borderRadius: '8px',
+      transition: 'all 0.3s ease',
+      fontWeight: '500',
+      textAlign: 'center',
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      width: '100%',
+      boxSizing: 'border-box',
+      border: 'none',
+      cursor: 'pointer',
+      display: 'block'
+    },
+    mobileActions: {
+      display: 'flex',
+      justifyContent: 'space-around',
+      gap: isSmallMobile ? '0.5rem' : '1rem',
+      marginTop: isSmallMobile ? '0.5rem' : '1.5rem',
+      paddingTop: isSmallMobile ? '0.5rem' : '1.5rem',
+      borderTopWidth: '1px',
+      borderTopStyle: 'solid',
+      borderTopColor: 'rgba(255,255,255,0.2)',
+      borderBottomWidth: '0',
+      borderLeftWidth: '0',
+      borderRightWidth: '0',
+      flexWrap: 'wrap'
+    },
+    mobileActionItem: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '0.3rem',
+      color: '#ffffff',
+      textDecoration: 'none',
+      minWidth: '60px',
+      backgroundColor: 'transparent',
+      border: 'none',
+      cursor: 'pointer'
+    },
+    mobileActionIcon: {
+      fontSize: isSmallMobile ? '1.2rem' : '1.5rem'
+    },
+    mobileActionLabel: {
+      fontSize: isSmallMobile ? '0.7rem' : '0.8rem',
+      whiteSpace: 'nowrap'
+    },
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      zIndex: 998,
+      display: isMenuOpen ? 'block' : 'none',
+      border: 'none'
     }
   };
 
+  // Add keyframes for animations
+  useEffect(() => {
+    const styleSheet = document.styleSheets[0];
+    const keyframes = `
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `;
+    
+    try {
+      styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+    } catch (e) {
+      // Keyframes already added
+    }
+  }, []);
+
   return (
-    <nav style={themeStyles.navbar}>
-      <div style={styles.navContainer}>
-        <Link to="/" style={themeStyles.logoContainer}>
-          <img 
-            src="/assets/images/Logo.png"
-            alt="Neckline Cosmetic" 
-            style={themeStyles.logo}
-          />
-        </Link>
+    <>
+      <nav ref={navbarRef} style={themeStyles.navbar}>
+        <div style={themeStyles.navContainer}>
+          {/* Logo */}
+          <Link to="/" style={themeStyles.logoContainer}>
+            <img 
+              src="/assets/images/Logo.png"
+              alt="Neckline Cosmetic" 
+              style={themeStyles.logo}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://via.placeholder.com/120x40/f8f8f8/e88ca6?text=NC";
+              }}
+            />
+          </Link>
 
-        {/* Search Bar - Hidden on mobile when menu is open */}
-        {!isMobile && <SearchBar />}
+          {/* Desktop Search Bar */}
+          {!isMobile && (
+            <div style={themeStyles.desktopSearchWrapper} className="search-bar-container">
+              <SearchBar />
+            </div>
+          )}
 
-        <div style={styles.rightSection}>
-          {isMobile && isMenuOpen && <SearchBar />}
-          
-          <div style={themeStyles.navLinks}>
-            <Link to="/shop" style={themeStyles.link} onClick={() => setIsMenuOpen(false)}>Shop</Link>
-            <Link to="/about" style={themeStyles.link} onClick={() => setIsMenuOpen(false)}>About</Link>
-            <Link to="/blog" style={themeStyles.link} onClick={() => setIsMenuOpen(false)}>Blog</Link>
-            <Link to="/contact" style={themeStyles.link} onClick={() => setIsMenuOpen(false)}>Contact</Link>
-            
-            {/* Wishlist Button */}
-            <WishlistButton />
-            
-            {/* Cart Button */}
-            <Link to="/cart" style={themeStyles.cartLink} onClick={() => setIsMenuOpen(false)}>
-              <FaShoppingCart />
-              {getCartCount() > 0 && (
-                <span style={themeStyles.cartCount}>{getCartCount()}</span>
-              )}
+          {/* Desktop Navigation Links - RESTORED */}
+          {!isMobile && (
+            <div style={themeStyles.navLinks}>
+              <Link to="/shop" style={themeStyles.link}>Shop</Link>
+              <Link to="/about" style={themeStyles.link}>About</Link>
+              <Link to="/blog" style={themeStyles.link}>Blog</Link>
+              <Link to="/contact" style={themeStyles.link}>Contact</Link>
+            </div>
+          )}
+
+          {/* Right Section - Icons */}
+          <div style={themeStyles.rightSection}>
+            {/* Mobile Search Toggle */}
+            {isMobile && (
+              <button 
+                ref={searchButtonRef}
+                style={themeStyles.mobileSearchButton}
+                onClick={toggleMobileSearch}
+                aria-label="Toggle search"
+              >
+                <FaSearch />
+              </button>
+            )}
+
+            {/* Desktop Icons */}
+            {!isMobile && (
+              <>
+                <WishlistButton />
+                <Link to="/cart" style={themeStyles.cartLink}>
+                  <FaShoppingCart />
+                  {getCartCount() > 0 && (
+                    <span style={themeStyles.cartCount}>{getCartCount()}</span>
+                  )}
+                </Link>
+                <ThemeToggle />
+              </>
+            )}
+
+            {/* Mobile Menu Button */}
+            <button 
+              style={themeStyles.menuButton}
+              onClick={() => {
+                setIsMenuOpen(!isMenuOpen);
+                setShowMobileSearch(false);
+              }}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Search Bar (when toggled) */}
+        {isMobile && showMobileSearch && (
+          <div 
+            style={themeStyles.mobileSearchWrapper} 
+            className="search-bar-container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SearchBar />
+          </div>
+        )}
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMobile && isMenuOpen && (
+        <div style={themeStyles.overlay} onClick={() => setIsMenuOpen(false)} />
+      )}
+
+      {/* Mobile Menu */}
+      {isMobile && (
+        <div 
+          ref={mobileMenuRef}
+          style={themeStyles.mobileMenu} 
+          className="mobile-menu"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={themeStyles.mobileNavLinks}>
+            <Link to="/shop" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+              Shop
+            </Link>
+            <Link to="/about" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+              About
+            </Link>
+            <Link to="/blog" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+              Blog
+            </Link>
+            <Link to="/contact" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+              Contact
             </Link>
           </div>
-          
-          <ThemeToggle />
-          
-          <button 
-            style={themeStyles.menuButton}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <FaTimes /> : <FaBars />}
-          </button>
-        </div>
-      </div>
-    </nav>
-  );
-};
 
-const styles = {
-  navContainer: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 1rem',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '1rem'
-  },
-  rightSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem'
-  }
+          <div style={themeStyles.mobileActions}>
+            <Link to="/wishlist" style={themeStyles.mobileActionItem} onClick={handleLinkClick}>
+              <WishlistButton />
+              <span style={themeStyles.mobileActionLabel}>Wishlist</span>
+            </Link>
+            <Link to="/cart" style={themeStyles.mobileActionItem} onClick={handleLinkClick}>
+              <div style={{ position: 'relative' }}>
+                <FaShoppingCart style={themeStyles.mobileActionIcon} />
+                {getCartCount() > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    backgroundColor: isDarkMode ? '#f5346b' : '#333333',
+                    color: '#ffffff',
+                    borderRadius: '50%',
+                    padding: '2px 6px',
+                    fontSize: isSmallMobile ? '0.6rem' : '0.8rem',
+                    minWidth: '16px',
+                    height: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '600',
+                    border: 'none'
+                  }}>
+                    {getCartCount()}
+                  </span>
+                )}
+              </div>
+              <span style={themeStyles.mobileActionLabel}>Cart</span>
+            </Link>
+            <div style={themeStyles.mobileActionItem}>
+              <ThemeToggle />
+              <span style={themeStyles.mobileActionLabel}>Theme</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default Navbar;
