@@ -5,7 +5,8 @@ import { useCart } from '../context/CartContext';
 import { 
   FaArrowLeft, FaTruck, FaCreditCard, FaMoneyBill, 
   FaUniversity, FaQrcode, FaLock, FaShieldAlt,
-  FaCheckCircle, FaGooglePay, FaAmazonPay, FaUpload
+  FaCheckCircle, FaGooglePay, FaAmazonPay, FaUpload,
+  FaTimes
 } from 'react-icons/fa';
 import { SiPaytm, SiPhonepe } from 'react-icons/si';
 
@@ -14,15 +15,17 @@ const Checkout = () => {
   const { isDarkMode } = useTheme();
   const { cartItems, getCartTotal, clearCart } = useCart();
   
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState('');
-  const [qrCodeSrc, setQrCodeSrc] = useState('/assets/images/payment/qr-code.jpeg'); // Default QR code path
+  const [qrCodeSrc, setQrCodeSrc] = useState('/assets/images/payment/qr-code.jpeg');
   const [qrError, setQrError] = useState(false);
   const [upiId, setUpiId] = useState('');
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [showMobileSummary, setShowMobileSummary] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -41,6 +44,16 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState({});
 
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Redirect if cart is empty
   useEffect(() => {
     if (cartItems.length === 0 && !orderComplete) {
@@ -51,7 +64,7 @@ const Checkout = () => {
   // Calculate totals
   const subtotal = getCartTotal();
   const shipping = subtotal > 500 ? 0 : 40;
-  const tax = subtotal * 0.18; // 18% GST
+  const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
 
   const handleInputChange = (e) => {
@@ -60,7 +73,6 @@ const Checkout = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -109,9 +121,7 @@ const Checkout = () => {
   const initiatePayment = async () => {
     setProcessing(true);
     
-    // Simulate payment processing
     setTimeout(() => {
-      // Generate random order ID
       const newOrderId = 'ORD' + Math.random().toString(36).substring(2, 10).toUpperCase();
       setOrderId(newOrderId);
       setOrderComplete(true);
@@ -128,7 +138,6 @@ const Checkout = () => {
 
   const handleUPIPayment = () => {
     if (upiId) {
-      // Here you would integrate with UPI payment gateway
       alert(`Initiating payment to UPI ID: ${upiId}`);
       setProcessing(true);
       setTimeout(() => {
@@ -144,6 +153,19 @@ const Checkout = () => {
       setPaymentConfirmed(true);
       setProcessing(false);
     }, 1500);
+  };
+
+  // Function to handle QR code upload - SINGLE DECLARATION
+  const handleQrUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setQrCodeSrc(reader.result);
+        setQrError(false);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Helper function to get step number style
@@ -180,35 +202,72 @@ const Checkout = () => {
     };
   };
 
+  // Get responsive values
+  const getContainerPadding = () => {
+    if (windowWidth <= 480) return '1rem 0.5rem';
+    if (windowWidth <= 768) return '1.5rem 1rem';
+    return '2rem 1rem';
+  };
+
+  const getTitleSize = () => {
+    if (windowWidth <= 480) return '1.5rem';
+    if (windowWidth <= 768) return '1.8rem';
+    return '2rem';
+  };
+
+  const getGridColumns = () => {
+    if (windowWidth <= 768) return '1fr';
+    return '2fr 1fr';
+  };
+
+  const getFormGridColumns = () => {
+    if (windowWidth <= 480) return '1fr';
+    return 'repeat(2, 1fr)';
+  };
+
+  const getPaymentMethodsGrid = () => {
+    if (windowWidth <= 480) return 'repeat(2, 1fr)';
+    if (windowWidth <= 768) return 'repeat(4, 1fr)';
+    return 'repeat(auto-fit, minmax(150px, 1fr))';
+  };
+
   const themeStyles = {
     container: {
       maxWidth: '1200px',
       margin: '0 auto',
-      padding: '2rem 1rem',
+      padding: getContainerPadding(),
       backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
       color: isDarkMode ? '#ffffff' : '#333333',
-      minHeight: '100vh'
+      minHeight: '100vh',
+      transition: 'all 0.3s ease',
+      overflowX: 'hidden',
+      width: '100%',
+      boxSizing: 'border-box'
     },
 
     // Header
     header: {
       display: 'flex',
       alignItems: 'center',
-      gap: '1rem',
-      marginBottom: '2rem'
+      gap: '0.75rem',
+      marginBottom: windowWidth <= 480 ? '1rem' : '2rem',
+      flexWrap: 'wrap',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     backButton: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.5rem',
-      padding: '0.5rem 1rem',
+      padding: windowWidth <= 480 ? '0.4rem 0.8rem' : '0.5rem 1rem',
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
       border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
       borderRadius: '2rem',
       color: isDarkMode ? '#ffffff' : '#333333',
       textDecoration: 'none',
-      fontSize: '0.95rem',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '0.95rem',
       transition: 'all 0.3s ease',
+      whiteSpace: 'nowrap',
       ':hover': {
         backgroundColor: '#e88ca6',
         color: '#ffffff',
@@ -216,26 +275,39 @@ const Checkout = () => {
       }
     },
     title: {
-      fontSize: '2rem',
+      fontSize: getTitleSize(),
       fontWeight: '700',
       color: isDarkMode ? '#e88ca6' : '#333333',
-      margin: 0
+      margin: 0,
+      flex: 1,
+      minWidth: windowWidth <= 480 ? '120px' : 'auto',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
     },
-
-    // Checkout Grid
-    checkoutGrid: {
-      display: 'grid',
-      gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : '2fr 1fr',
-      gap: '2rem'
+    mobileSummaryToggle: {
+      display: windowWidth <= 768 ? 'flex' : 'none',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.5rem 1rem',
+      backgroundColor: '#e88ca6',
+      color: '#ffffff',
+      border: 'none',
+      borderRadius: '2rem',
+      fontSize: '0.9rem',
+      cursor: 'pointer',
+      whiteSpace: 'nowrap'
     },
 
     // Steps
     stepsContainer: {
-      marginBottom: '2rem',
+      marginBottom: windowWidth <= 480 ? '1rem' : '2rem',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      position: 'relative'
+      position: 'relative',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     step: {
       display: 'flex',
@@ -243,25 +315,32 @@ const Checkout = () => {
       alignItems: 'center',
       position: 'relative',
       zIndex: 2,
-      flex: 1
+      flex: 1,
+      minWidth: 0
     },
     stepNumber: {
-      width: '40px',
-      height: '40px',
+      width: windowWidth <= 480 ? '32px' : '40px',
+      height: windowWidth <= 480 ? '32px' : '40px',
       borderRadius: '50%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       fontWeight: '600',
-      marginBottom: '0.5rem'
+      marginBottom: '0.25rem',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '1rem'
     },
     stepLabel: {
-      fontSize: '0.9rem',
-      textAlign: 'center'
+      fontSize: windowWidth <= 480 ? '0.7rem' : '0.9rem',
+      textAlign: 'center',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: '100%',
+      padding: '0 0.25rem'
     },
     stepLine: {
       position: 'absolute',
-      top: '20px',
+      top: windowWidth <= 480 ? '16px' : '20px',
       left: '0',
       right: '0',
       height: '2px',
@@ -270,7 +349,7 @@ const Checkout = () => {
     },
     stepLineFill: {
       position: 'absolute',
-      top: '20px',
+      top: windowWidth <= 480 ? '16px' : '20px',
       left: '0',
       height: '2px',
       backgroundColor: '#e88ca6',
@@ -279,46 +358,64 @@ const Checkout = () => {
       zIndex: 1
     },
 
+    // Checkout Grid
+    checkoutGrid: {
+      display: 'grid',
+      gridTemplateColumns: getGridColumns(),
+      gap: windowWidth <= 480 ? '1rem' : '2rem',
+      width: '100%',
+      boxSizing: 'border-box'
+    },
+
     // Form Section
     formSection: {
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
-      borderRadius: '1rem',
-      padding: '2rem',
-      marginBottom: '2rem'
+      borderRadius: windowWidth <= 480 ? '1rem' : '1.5rem',
+      padding: windowWidth <= 480 ? '1rem' : '2rem',
+      marginBottom: windowWidth <= 480 ? '1rem' : '2rem',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     sectionTitle: {
-      fontSize: '1.3rem',
+      fontSize: windowWidth <= 480 ? '1.1rem' : '1.3rem',
       fontWeight: '600',
-      marginBottom: '1.5rem',
+      marginBottom: windowWidth <= 480 ? '1rem' : '1.5rem',
       color: isDarkMode ? '#e88ca6' : '#333333',
       display: 'flex',
       alignItems: 'center',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      flexWrap: 'wrap'
     },
     formGrid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '1rem'
+      gridTemplateColumns: getFormGridColumns(),
+      gap: windowWidth <= 480 ? '0.75rem' : '1rem',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     formGroup: {
-      marginBottom: '1rem'
+      marginBottom: '1rem',
+      gridColumn: windowWidth <= 480 ? '1 / -1' : 'auto',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     label: {
       display: 'block',
-      marginBottom: '0.5rem',
-      fontSize: '0.95rem',
+      marginBottom: '0.25rem',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '0.95rem',
       color: isDarkMode ? '#cccccc' : '#666666'
     },
     input: {
       width: '100%',
-      padding: '0.75rem',
+      padding: windowWidth <= 480 ? '0.7rem' : '0.75rem',
       backgroundColor: isDarkMode ? '#404040' : '#ffffff',
       border: `1px solid ${isDarkMode ? '#555' : '#ddd'}`,
-      borderRadius: '0.5rem',
-      fontSize: '1rem',
+      borderRadius: windowWidth <= 480 ? '2rem' : '0.75rem',
+      fontSize: windowWidth <= 480 ? '0.9rem' : '1rem',
       color: isDarkMode ? '#ffffff' : '#333333',
       transition: 'all 0.3s ease',
       outline: 'none',
+      boxSizing: 'border-box',
       ':focus': {
         borderColor: '#e88ca6',
         boxShadow: '0 0 0 3px rgba(232,140,166,0.2)'
@@ -326,37 +423,44 @@ const Checkout = () => {
     },
     error: {
       color: '#ff4444',
-      fontSize: '0.85rem',
-      marginTop: '0.25rem'
+      fontSize: '0.8rem',
+      marginTop: '0.25rem',
+      marginLeft: '0.5rem'
     },
     checkboxLabel: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.5rem',
       cursor: 'pointer',
-      color: isDarkMode ? '#cccccc' : '#666666'
+      color: isDarkMode ? '#cccccc' : '#666666',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '0.95rem',
+      flexWrap: 'wrap'
     },
 
     // Payment Methods
     paymentMethods: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-      gap: '1rem',
-      marginBottom: '2rem'
+      gridTemplateColumns: getPaymentMethodsGrid(),
+      gap: windowWidth <= 480 ? '0.5rem' : '1rem',
+      marginBottom: '2rem',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     paymentMethod: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '0.5rem',
-      padding: '1.5rem',
+      gap: '0.25rem',
+      padding: windowWidth <= 480 ? '0.75rem' : '1.5rem',
       backgroundColor: isDarkMode ? '#404040' : '#ffffff',
       border: `2px solid ${isDarkMode ? '#555' : '#e0e0e0'}`,
-      borderRadius: '1rem',
+      borderRadius: windowWidth <= 480 ? '0.75rem' : '1rem',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
+      boxSizing: 'border-box',
+      width: '100%',
       ':hover': {
-        transform: 'translateY(-2px)',
+        transform: windowWidth <= 768 ? 'none' : 'translateY(-2px)',
         boxShadow: '0 5px 15px rgba(232,140,166,0.2)'
       }
     },
@@ -365,35 +469,39 @@ const Checkout = () => {
       backgroundColor: isDarkMode ? '#2d2d2d' : '#fff5f7'
     },
     paymentIcon: {
-      fontSize: '2rem',
+      fontSize: windowWidth <= 480 ? '1.5rem' : '2rem',
       color: '#e88ca6'
     },
     paymentName: {
-      fontSize: '0.9rem',
+      fontSize: windowWidth <= 480 ? '0.7rem' : '0.9rem',
       fontWeight: '500',
+      textAlign: 'center',
       color: isDarkMode ? '#ffffff' : '#333333'
     },
 
     // UPI Section
     upiSection: {
       marginTop: '2rem',
-      padding: '2rem',
+      padding: windowWidth <= 480 ? '1rem' : '2rem',
       backgroundColor: isDarkMode ? '#404040' : '#ffffff',
-      borderRadius: '1rem',
-      textAlign: 'center'
+      borderRadius: windowWidth <= 480 ? '1rem' : '1rem',
+      textAlign: 'center',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     qrCode: {
-      width: '250px',
-      height: '250px',
-      margin: '0 auto 1.5rem',
+      width: windowWidth <= 480 ? '180px' : '250px',
+      height: windowWidth <= 480 ? '180px' : '250px',
+      margin: '0 auto 1rem',
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
-      borderRadius: '1rem',
+      borderRadius: windowWidth <= 480 ? '0.75rem' : '1rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       border: `2px solid ${isDarkMode ? '#555' : '#ddd'}`,
       overflow: 'hidden',
-      padding: '1rem'
+      padding: '0.5rem',
+      boxSizing: 'border-box'
     },
     qrImage: {
       maxWidth: '100%',
@@ -402,100 +510,148 @@ const Checkout = () => {
     },
     qrPlaceholder: {
       textAlign: 'center',
-      color: isDarkMode ? '#999' : '#666'
+      color: isDarkMode ? '#999' : '#666',
+      fontSize: windowWidth <= 480 ? '0.8rem' : '1rem'
     },
     qrUploadButton: {
       display: 'inline-flex',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: '0.5rem',
-      padding: '0.75rem 1.5rem',
+      padding: windowWidth <= 480 ? '0.6rem 1rem' : '0.75rem 1.5rem',
       backgroundColor: '#e88ca6',
       color: '#ffffff',
       border: 'none',
       borderRadius: '2rem',
-      fontSize: '0.95rem',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '0.95rem',
       fontWeight: '600',
       cursor: 'pointer',
       marginTop: '1rem',
       transition: 'all 0.3s ease',
+      width: windowWidth <= 480 ? '100%' : 'auto',
       ':hover': {
         backgroundColor: '#d47a94',
-        transform: 'translateY(-2px)'
+        transform: windowWidth <= 768 ? 'none' : 'translateY(-2px)'
       }
     },
     upiInput: {
       display: 'flex',
-      gap: '1rem',
+      flexDirection: windowWidth <= 480 ? 'column' : 'row',
+      gap: '0.5rem',
       maxWidth: '400px',
-      margin: '1rem auto'
+      margin: '1rem auto',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     verifyButton: {
-      padding: '0.75rem 1.5rem',
+      padding: windowWidth <= 480 ? '0.7rem' : '0.75rem 1.5rem',
       backgroundColor: '#e88ca6',
       color: '#ffffff',
       border: 'none',
-      borderRadius: '0.5rem',
-      fontSize: '1rem',
+      borderRadius: windowWidth <= 480 ? '2rem' : '0.75rem',
+      fontSize: windowWidth <= 480 ? '0.9rem' : '1rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       whiteSpace: 'nowrap',
+      width: windowWidth <= 480 ? '100%' : 'auto',
       ':hover': {
         backgroundColor: '#d47a94',
-        transform: 'translateY(-2px)'
+        transform: windowWidth <= 768 ? 'none' : 'translateY(-2px)'
       }
     },
     paymentConfirmed: {
       marginTop: '1rem',
-      padding: '1rem',
+      padding: '0.75rem',
       backgroundColor: '#4caf50',
       color: '#ffffff',
-      borderRadius: '0.5rem',
+      borderRadius: '0.75rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '1rem',
+      flexWrap: 'wrap',
+      width: '100%',
+      boxSizing: 'border-box'
     },
 
     // Order Summary
     summary: {
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
-      borderRadius: '1rem',
-      padding: '1.5rem',
-      position: 'sticky',
-      top: '100px'
+      borderRadius: windowWidth <= 480 ? '1rem' : '1.5rem',
+      padding: windowWidth <= 480 ? '1rem' : '1.5rem',
+      position: windowWidth <= 768 ? 'fixed' : 'sticky',
+      top: windowWidth <= 768 ? 'auto' : '100px',
+      bottom: windowWidth <= 768 ? '0' : 'auto',
+      left: windowWidth <= 768 ? '0' : 'auto',
+      right: windowWidth <= 768 ? '0' : 'auto',
+      zIndex: windowWidth <= 768 ? 1000 : 1,
+      transform: windowWidth <= 768 && showMobileSummary ? 'translateY(0)' : 'translateY(100%)',
+      transition: 'transform 0.3s ease',
+      maxHeight: windowWidth <= 768 ? '80vh' : 'none',
+      overflowY: windowWidth <= 768 ? 'auto' : 'visible',
+      borderTopLeftRadius: windowWidth <= 768 ? '1.5rem' : '1.5rem',
+      borderTopRightRadius: windowWidth <= 768 ? '1.5rem' : '1.5rem',
+      borderBottomLeftRadius: windowWidth <= 768 ? '0' : '1.5rem',
+      borderBottomRightRadius: windowWidth <= 768 ? '0' : '1.5rem',
+      boxShadow: windowWidth <= 768 ? '0 -5px 20px rgba(0,0,0,0.15)' : 'none',
+      width: windowWidth <= 768 ? '100%' : 'auto',
+      boxSizing: 'border-box'
+    },
+    summaryHeader: {
+      display: windowWidth <= 768 ? 'flex' : 'none',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '1rem',
+      paddingBottom: '0.75rem',
+      borderBottom: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`
+    },
+    closeSummary: {
+      background: 'none',
+      border: 'none',
+      fontSize: '1.2rem',
+      cursor: 'pointer',
+      color: isDarkMode ? '#ffffff' : '#333333',
+      padding: '0.5rem'
     },
     summaryTitle: {
-      fontSize: '1.3rem',
+      fontSize: windowWidth <= 480 ? '1.1rem' : '1.3rem',
       fontWeight: '600',
-      marginBottom: '1.5rem',
+      marginBottom: '1rem',
       color: isDarkMode ? '#e88ca6' : '#333333'
     },
     summaryItem: {
       display: 'flex',
       justifyContent: 'space-between',
-      marginBottom: '1rem',
-      color: isDarkMode ? '#cccccc' : '#666666'
+      marginBottom: '0.75rem',
+      color: isDarkMode ? '#cccccc' : '#666666',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '1rem',
+      flexWrap: 'wrap',
+      gap: '0.5rem'
     },
     summaryDivider: {
       height: '1px',
       backgroundColor: isDarkMode ? '#404040' : '#e0e0e0',
-      margin: '1rem 0'
+      margin: '0.75rem 0'
     },
     summaryTotal: {
       display: 'flex',
       justifyContent: 'space-between',
-      fontSize: '1.2rem',
+      fontSize: windowWidth <= 480 ? '1rem' : '1.2rem',
       fontWeight: '700',
       color: isDarkMode ? '#e88ca6' : '#333333',
-      marginTop: '1rem'
+      marginTop: '0.75rem',
+      flexWrap: 'wrap',
+      gap: '0.5rem'
     },
     productItem: {
       display: 'flex',
-      gap: '1rem',
+      gap: windowWidth <= 480 ? '0.5rem' : '1rem',
       marginBottom: '1rem',
       paddingBottom: '1rem',
       borderBottom: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+      flexWrap: windowWidth <= 480 ? 'wrap' : 'nowrap',
       ':last-child': {
         borderBottom: 'none',
         marginBottom: 0,
@@ -503,27 +659,33 @@ const Checkout = () => {
       }
     },
     productImage: {
-      width: '60px',
-      height: '60px',
+      width: windowWidth <= 480 ? '50px' : '60px',
+      height: windowWidth <= 480 ? '50px' : '60px',
       borderRadius: '0.5rem',
-      objectFit: 'cover'
+      objectFit: 'cover',
+      flexShrink: 0
     },
     productDetails: {
-      flex: 1
+      flex: 1,
+      minWidth: 0
     },
     productName: {
-      fontSize: '0.95rem',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '0.95rem',
       fontWeight: '600',
       marginBottom: '0.25rem',
-      color: isDarkMode ? '#ffffff' : '#333333'
+      color: isDarkMode ? '#ffffff' : '#333333',
+      whiteSpace: 'normal',
+      wordBreak: 'break-word'
     },
     productMeta: {
-      fontSize: '0.85rem',
+      fontSize: windowWidth <= 480 ? '0.75rem' : '0.85rem',
       color: isDarkMode ? '#999' : '#999',
-      marginBottom: '0.25rem'
+      marginBottom: '0.25rem',
+      whiteSpace: 'normal',
+      wordBreak: 'break-word'
     },
     productPrice: {
-      fontSize: '0.95rem',
+      fontSize: windowWidth <= 480 ? '0.85rem' : '0.95rem',
       fontWeight: '600',
       color: '#e88ca6'
     },
@@ -531,23 +693,28 @@ const Checkout = () => {
     // Action Buttons
     actionButtons: {
       display: 'flex',
-      gap: '1rem',
-      marginTop: '2rem'
+      flexDirection: windowWidth <= 480 ? 'column' : 'row',
+      gap: '0.75rem',
+      marginTop: '1.5rem',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     primaryButton: {
       flex: 1,
-      padding: '1rem',
+      padding: windowWidth <= 480 ? '0.875rem' : '1rem',
       backgroundColor: '#e88ca6',
       color: '#ffffff',
       border: 'none',
-      borderRadius: '0.5rem',
-      fontSize: '1.1rem',
+      borderRadius: windowWidth <= 480 ? '2rem' : '0.75rem',
+      fontSize: windowWidth <= 480 ? '0.95rem' : '1.1rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
+      width: windowWidth <= 480 ? '100%' : 'auto',
+      whiteSpace: 'nowrap',
       ':hover': {
         backgroundColor: '#d47a94',
-        transform: 'translateY(-2px)'
+        transform: windowWidth <= 768 ? 'none' : 'translateY(-2px)'
       },
       ':disabled': {
         opacity: 0.5,
@@ -556,15 +723,17 @@ const Checkout = () => {
     },
     secondaryButton: {
       flex: 1,
-      padding: '1rem',
+      padding: windowWidth <= 480 ? '0.875rem' : '1rem',
       backgroundColor: 'transparent',
       color: isDarkMode ? '#ffffff' : '#333333',
       border: `1px solid ${isDarkMode ? '#404040' : '#ddd'}`,
-      borderRadius: '0.5rem',
-      fontSize: '1.1rem',
+      borderRadius: windowWidth <= 480 ? '2rem' : '0.75rem',
+      fontSize: windowWidth <= 480 ? '0.95rem' : '1.1rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
+      width: windowWidth <= 480 ? '100%' : 'auto',
+      whiteSpace: 'nowrap',
       ':hover': {
         backgroundColor: isDarkMode ? '#404040' : '#f8f8f8'
       }
@@ -576,47 +745,43 @@ const Checkout = () => {
       alignItems: 'center',
       justifyContent: 'center',
       gap: '0.5rem',
-      marginTop: '2rem',
-      padding: '1rem',
+      marginTop: '1.5rem',
+      padding: '0.75rem',
       backgroundColor: isDarkMode ? '#404040' : '#ffffff',
-      borderRadius: '0.5rem',
+      borderRadius: '0.75rem',
       color: isDarkMode ? '#cccccc' : '#666666',
-      fontSize: '0.9rem'
+      fontSize: windowWidth <= 480 ? '0.8rem' : '0.9rem',
+      flexWrap: 'wrap',
+      textAlign: 'center',
+      width: '100%',
+      boxSizing: 'border-box'
     },
 
     // Order Complete
     orderComplete: {
       textAlign: 'center',
-      padding: '4rem 2rem',
+      padding: windowWidth <= 480 ? '2rem 1rem' : '4rem 2rem',
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
-      borderRadius: '2rem'
+      borderRadius: windowWidth <= 480 ? '1.5rem' : '2rem',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     successIcon: {
-      fontSize: '5rem',
+      fontSize: windowWidth <= 480 ? '3rem' : '5rem',
       color: '#4caf50',
-      marginBottom: '1.5rem'
+      marginBottom: '1rem'
     },
     orderNumber: {
-      fontSize: '1.2rem',
+      fontSize: windowWidth <= 480 ? '0.9rem' : '1.2rem',
       color: isDarkMode ? '#e88ca6' : '#333333',
       margin: '1rem 0',
-      padding: '1rem',
+      padding: '0.75rem',
       backgroundColor: isDarkMode ? '#404040' : '#ffffff',
-      borderRadius: '0.5rem',
-      display: 'inline-block'
-    }
-  };
-
-  // Function to handle QR code upload
-  const handleQrUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setQrCodeSrc(reader.result);
-        setQrError(false);
-      };
-      reader.readAsDataURL(file);
+      borderRadius: '0.75rem',
+      display: 'inline-block',
+      wordBreak: 'break-all',
+      maxWidth: '100%',
+      boxSizing: 'border-box'
     }
   };
 
@@ -626,7 +791,9 @@ const Checkout = () => {
       <div style={themeStyles.container}>
         <div style={themeStyles.orderComplete}>
           <FaCheckCircle style={themeStyles.successIcon} />
-          <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Order Placed Successfully!</h2>
+          <h2 style={{ fontSize: windowWidth <= 480 ? '1.5rem' : '2rem', marginBottom: '0.75rem' }}>
+            Order Placed Successfully!
+          </h2>
           <p style={{ color: isDarkMode ? '#ccc' : '#666', marginBottom: '1rem' }}>
             Thank you for your purchase. We'll send you an email with order details.
           </p>
@@ -639,8 +806,9 @@ const Checkout = () => {
               ...themeStyles.primaryButton,
               display: 'inline-block',
               width: 'auto',
-              marginTop: '2rem',
-              textDecoration: 'none'
+              marginTop: '1.5rem',
+              textDecoration: 'none',
+              padding: windowWidth <= 480 ? '0.75rem 1.5rem' : '1rem 2rem'
             }}
           >
             Continue Shopping
@@ -655,9 +823,17 @@ const Checkout = () => {
       {/* Header */}
       <div style={themeStyles.header}>
         <Link to="/cart" style={themeStyles.backButton}>
-          <FaArrowLeft /> Back to Cart
+          <FaArrowLeft /> Back
         </Link>
         <h1 style={themeStyles.title}>Checkout</h1>
+        {windowWidth <= 768 && (
+          <button 
+            style={themeStyles.mobileSummaryToggle}
+            onClick={() => setShowMobileSummary(!showMobileSummary)}
+          >
+            {showMobileSummary ? 'Hide' : 'Show'} Summary
+          </button>
+        )}
       </div>
 
       {/* Progress Steps */}
@@ -757,14 +933,14 @@ const Checkout = () => {
                 </div>
 
                 <div style={{ ...themeStyles.formGroup, gridColumn: '1 / -1' }}>
-                  <label style={themeStyles.label}>Apartment, suite, etc. (optional)</label>
+                  <label style={themeStyles.label}>Apartment (optional)</label>
                   <input
                     type="text"
                     name="apartment"
                     value={formData.apartment}
                     onChange={handleInputChange}
                     style={themeStyles.input}
-                    placeholder="Apartment, suite, unit, etc."
+                    placeholder="Apartment, suite, etc."
                   />
                 </div>
 
@@ -847,7 +1023,7 @@ const Checkout = () => {
                   onClick={() => setPaymentMethod('card')}
                 >
                   <FaCreditCard style={themeStyles.paymentIcon} />
-                  <span style={themeStyles.paymentName}>Credit/Debit Card</span>
+                  <span style={themeStyles.paymentName}>Card</span>
                 </div>
 
                 <div
@@ -925,14 +1101,13 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* UPI Payment with Custom QR Code */}
+              {/* UPI Payment */}
               {paymentMethod === 'upi' && (
                 <div style={themeStyles.upiSection}>
-                  <h3 style={{ marginBottom: '1rem', color: isDarkMode ? '#ffffff' : '#333333' }}>
+                  <h3 style={{ marginBottom: '1rem', fontSize: windowWidth <= 480 ? '1rem' : '1.2rem' }}>
                     Scan QR Code to Pay
                   </h3>
                   
-                  {/* QR Code Display */}
                   <div style={themeStyles.qrCode}>
                     {!qrError ? (
                       <img 
@@ -943,13 +1118,12 @@ const Checkout = () => {
                       />
                     ) : (
                       <div style={themeStyles.qrPlaceholder}>
-                        <FaQrcode style={{ fontSize: '3rem', marginBottom: '0.5rem' }} />
+                        <FaQrcode style={{ fontSize: '2rem', marginBottom: '0.5rem' }} />
                         <p>QR Code not found</p>
                       </div>
                     )}
                   </div>
 
-                  {/* QR Code Upload Option */}
                   <div>
                     <input
                       type="file"
@@ -959,15 +1133,14 @@ const Checkout = () => {
                       onChange={handleQrUpload}
                     />
                     <label htmlFor="qr-upload" style={themeStyles.qrUploadButton}>
-                      <FaUpload /> Upload Your QR Code
+                      <FaUpload /> Upload QR
                     </label>
                   </div>
 
                   <p style={{ margin: '1rem 0', color: isDarkMode ? '#ccc' : '#666' }}>
-                    Or enter UPI ID manually
+                    Or enter UPI ID
                   </p>
 
-                  {/* UPI ID Input */}
                   <div style={themeStyles.upiInput}>
                     <input
                       type="text"
@@ -985,17 +1158,15 @@ const Checkout = () => {
                     </button>
                   </div>
 
-                  {/* Payment Confirmation */}
                   {paymentConfirmed && (
                     <div style={themeStyles.paymentConfirmed}>
-                      <FaCheckCircle /> Payment Successful! Click Place Order to continue.
+                      <FaCheckCircle /> Payment Successful!
                     </div>
                   )}
 
-                  {/* QR Payment Button */}
                   {!paymentConfirmed && (
                     <button 
-                      style={{...themeStyles.verifyButton, marginTop: '1rem'}}
+                      style={{...themeStyles.verifyButton, marginTop: '1rem', width: windowWidth <= 480 ? '100%' : 'auto'}}
                       onClick={handleQRPayment}
                       disabled={processing}
                     >
@@ -1050,14 +1221,13 @@ const Checkout = () => {
                   style={themeStyles.primaryButton}
                   disabled={processing || (paymentMethod === 'upi' && !paymentConfirmed)}
                 >
-                  {processing ? 'Processing...' : `Place Order • ₹${total.toFixed(2)}`}
+                  {processing ? 'Processing...' : `Pay ₹${total.toFixed(2)}`}
                 </button>
               </div>
 
-              {/* Security Badge */}
               <div style={themeStyles.securityBadge}>
                 <FaLock /> <FaShieldAlt />
-                <span>Your payment information is secure. 256-bit encrypted.</span>
+                <span>256-bit encrypted</span>
               </div>
             </div>
           )}
@@ -1065,9 +1235,20 @@ const Checkout = () => {
 
         {/* Right Column - Order Summary */}
         <div style={themeStyles.summary}>
+          {windowWidth <= 768 && (
+            <div style={themeStyles.summaryHeader}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Order Summary</h3>
+              <button 
+                style={themeStyles.closeSummary}
+                onClick={() => setShowMobileSummary(false)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+          )}
+          
           <h2 style={themeStyles.summaryTitle}>Order Summary</h2>
           
-          {/* Products */}
           <div style={{ marginBottom: '1.5rem' }}>
             {cartItems.map(item => (
               <div key={`${item.id}-${item.selectedShade}`} style={themeStyles.productItem}>
@@ -1092,7 +1273,6 @@ const Checkout = () => {
 
           <div style={themeStyles.summaryDivider} />
 
-          {/* Price Breakdown */}
           <div style={themeStyles.summaryItem}>
             <span>Subtotal</span>
             <span>₹{subtotal.toFixed(2)}</span>
@@ -1116,12 +1296,12 @@ const Checkout = () => {
           {subtotal > 500 && (
             <div style={{
               marginTop: '1rem',
-              padding: '0.75rem',
+              padding: '0.5rem',
               backgroundColor: '#4caf50',
               color: '#ffffff',
-              borderRadius: '0.5rem',
+              borderRadius: '0.75rem',
               textAlign: 'center',
-              fontSize: '0.9rem'
+              fontSize: windowWidth <= 480 ? '0.8rem' : '0.9rem'
             }}>
               🎉 Free Shipping Applied!
             </div>

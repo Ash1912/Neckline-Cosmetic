@@ -108,7 +108,6 @@ const Navbar = () => {
     return '0.75rem 0';
   };
 
-  // Fixed styles with NO shorthand/longhand conflicts
   const themeStyles = {
     navbar: {
       backgroundColor: isDarkMode 
@@ -217,7 +216,8 @@ const Navbar = () => {
       flexShrink: 0,
       minWidth: isSmallMobile ? '32px' : '40px',
       minHeight: isSmallMobile ? '32px' : '40px',
-      border: 'none'
+      border: 'none',
+      order: isMobile ? 1 : 'auto' // Place hamburger first on mobile
     },
     mobileSearchButton: {
       display: isMobile ? 'flex' : 'none',
@@ -239,7 +239,8 @@ const Navbar = () => {
       display: 'flex',
       alignItems: 'center',
       gap: isSmallMobile ? '0.1rem' : '0.5rem',
-      flexShrink: 0
+      flexShrink: 0,
+      order: isMobile ? 3 : 'auto' // Place icons after hamburger on mobile
     },
     desktopSearchWrapper: {
       flex: 1,
@@ -377,7 +378,19 @@ const Navbar = () => {
     <>
       <nav ref={navbarRef} style={themeStyles.navbar}>
         <div style={themeStyles.navContainer}>
-          {/* Logo */}
+          {/* Hamburger Menu - First on Mobile */}
+          <button 
+            style={themeStyles.menuButton}
+            onClick={() => {
+              setIsMenuOpen(!isMenuOpen);
+              setShowMobileSearch(false);
+            }}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <FaTimes /> : <FaBars />}
+          </button>
+
+          {/* Logo - Second on Mobile */}
           <Link to="/" style={themeStyles.logoContainer}>
             <img 
               src="/assets/images/Logo.png"
@@ -397,7 +410,7 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Desktop Navigation Links - RESTORED */}
+          {/* Desktop Navigation Links */}
           {!isMobile && (
             <div style={themeStyles.navLinks}>
               <Link to="/shop" style={themeStyles.link}>Shop</Link>
@@ -407,7 +420,7 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Right Section - Icons */}
+          {/* Right Section - Icons (Third on Mobile) */}
           <div style={themeStyles.rightSection}>
             {/* Mobile Search Toggle */}
             {isMobile && (
@@ -419,6 +432,20 @@ const Navbar = () => {
               >
                 <FaSearch />
               </button>
+            )}
+
+            {/* Mobile Icons - Always visible on mobile */}
+            {isMobile && (
+              <>
+                <WishlistButton />
+                <Link to="/cart" style={themeStyles.cartLink}>
+                  <FaShoppingCart />
+                  {getCartCount() > 0 && (
+                    <span style={themeStyles.cartCount}>{getCartCount()}</span>
+                  )}
+                </Link>
+                <ThemeToggle />
+              </>
             )}
 
             {/* Desktop Icons */}
@@ -434,18 +461,6 @@ const Navbar = () => {
                 <ThemeToggle />
               </>
             )}
-
-            {/* Mobile Menu Button */}
-            <button 
-              style={themeStyles.menuButton}
-              onClick={() => {
-                setIsMenuOpen(!isMenuOpen);
-                setShowMobileSearch(false);
-              }}
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <FaTimes /> : <FaBars />}
-            </button>
           </div>
         </div>
 
@@ -487,44 +502,6 @@ const Navbar = () => {
             <Link to="/contact" style={themeStyles.mobileLink} onClick={handleLinkClick}>
               Contact
             </Link>
-          </div>
-
-          <div style={themeStyles.mobileActions}>
-            <Link to="/wishlist" style={themeStyles.mobileActionItem} onClick={handleLinkClick}>
-              <WishlistButton />
-              <span style={themeStyles.mobileActionLabel}>Wishlist</span>
-            </Link>
-            <Link to="/cart" style={themeStyles.mobileActionItem} onClick={handleLinkClick}>
-              <div style={{ position: 'relative' }}>
-                <FaShoppingCart style={themeStyles.mobileActionIcon} />
-                {getCartCount() > 0 && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '-8px',
-                    right: '-8px',
-                    backgroundColor: isDarkMode ? '#f5346b' : '#333333',
-                    color: '#ffffff',
-                    borderRadius: '50%',
-                    padding: '2px 6px',
-                    fontSize: isSmallMobile ? '0.6rem' : '0.8rem',
-                    minWidth: '16px',
-                    height: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: '600',
-                    border: 'none'
-                  }}>
-                    {getCartCount()}
-                  </span>
-                )}
-              </div>
-              <span style={themeStyles.mobileActionLabel}>Cart</span>
-            </Link>
-            <div style={themeStyles.mobileActionItem}>
-              <ThemeToggle />
-              <span style={themeStyles.mobileActionLabel}>Theme</span>
-            </div>
           </div>
         </div>
       )}
