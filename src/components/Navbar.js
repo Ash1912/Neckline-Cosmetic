@@ -1,21 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import { useTheme } from '../context/ThemeContext';
-import { FaShoppingCart, FaBars, FaTimes, FaSearch } from 'react-icons/fa';
-import ThemeToggle from './ThemeToggle';
-import SearchBar from './SearchBar';
-import WishlistButton from './WishlistButton';
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useTheme } from "../context/ThemeContext";
+import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUser, FaSignOutAlt } from "react-icons/fa";
+import ThemeToggle from "./ThemeToggle";
+import SearchBar from "./SearchBar";
+import WishlistButton from "./WishlistButton";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const { getCartCount } = useCart();
   const { isDarkMode } = useTheme();
+  const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  
+
   // Refs for handling clicks
   const navbarRef = useRef(null);
   const mobileMenuRef = useRef(null);
@@ -35,12 +37,12 @@ const Navbar = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll);
-    
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll);
+
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -48,37 +50,41 @@ const Navbar = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Close mobile menu if clicking outside
-      if (isMenuOpen && 
-          navbarRef.current && 
-          !navbarRef.current.contains(event.target) && 
-          mobileMenuRef.current && 
-          !mobileMenuRef.current.contains(event.target)) {
+      if (
+        isMenuOpen &&
+        navbarRef.current &&
+        !navbarRef.current.contains(event.target) &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target)
+      ) {
         setIsMenuOpen(false);
       }
-      
+
       // Close mobile search if clicking outside
-      if (showMobileSearch && 
-          navbarRef.current && 
-          !navbarRef.current.contains(event.target) && 
-          !event.target.closest('.search-bar-container')) {
+      if (
+        showMobileSearch &&
+        navbarRef.current &&
+        !navbarRef.current.contains(event.target) &&
+        !event.target.closest(".search-bar-container")
+      ) {
         setShowMobileSearch(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMenuOpen, showMobileSearch]);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isMenuOpen]);
 
@@ -97,258 +103,266 @@ const Navbar = () => {
 
   // Get responsive logo size
   const getLogoSize = () => {
-    if (isSmallMobile) return '30px';
-    return '40px';
+    if (isSmallMobile) return "30px";
+    return "40px";
   };
 
   // Get responsive padding
   const getNavbarPadding = () => {
-    if (isSmallMobile) return '0.4rem 0';
-    if (isScrolled) return '0.5rem 0';
-    return '0.75rem 0';
+    if (isSmallMobile) return "0.4rem 0";
+    if (isScrolled) return "0.5rem 0";
+    return "0.75rem 0";
   };
 
   const themeStyles = {
     navbar: {
-      backgroundColor: isDarkMode 
-        ? (isScrolled ? '#1a1a1a' : '#2d2d2d') 
-        : (isScrolled ? '#f5346b' : '#f5346b'),
-      boxShadow: isDarkMode 
-        ? '0 2px 8px rgba(0,0,0,0.3)' 
-        : '0 2px 8px rgba(0,0,0,0.1)',
-      position: 'sticky',
+      backgroundColor: isDarkMode
+        ? isScrolled
+          ? "#1a1a1a"
+          : "#2d2d2d"
+        : isScrolled
+          ? "#f5346b"
+          : "#f5346b",
+      boxShadow: isDarkMode
+        ? "0 2px 8px rgba(0,0,0,0.3)"
+        : "0 2px 8px rgba(0,0,0,0.1)",
+      position: "sticky",
       top: 0,
       zIndex: 1000,
-      transition: 'all 0.3s ease',
+      transition: "all 0.3s ease",
       padding: getNavbarPadding(),
-      width: '100%'
+      width: "100%",
     },
     navContainer: {
-      maxWidth: '1400px',
-      margin: '0 auto',
-      padding: isSmallMobile ? '0 0.5rem' : '0 1rem',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: isSmallMobile ? '0.25rem' : '1rem',
-      position: 'relative',
-      width: '100%',
-      boxSizing: 'border-box'
+      maxWidth: "1400px",
+      margin: "0 auto",
+      padding: isSmallMobile ? "0 0.5rem" : "0 1rem",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: isSmallMobile ? "0.25rem" : "1rem",
+      position: "relative",
+      width: "100%",
+      boxSizing: "border-box",
     },
     logo: {
       height: getLogoSize(),
-      width: 'auto',
-      maxWidth: isSmallMobile ? '100px' : '120px',
-      display: 'block',
-      filter: 'brightness(0) invert(1)',
-      transition: 'all 0.3s ease',
-      objectFit: 'contain'
+      width: "auto",
+      maxWidth: isSmallMobile ? "100px" : "120px",
+      display: "block",
+      filter: "brightness(0) invert(1)",
+      transition: "all 0.3s ease",
+      objectFit: "contain",
     },
     logoContainer: {
-      display: 'flex',
-      alignItems: 'center',
-      textDecoration: 'none',
+      display: "flex",
+      alignItems: "center",
+      textDecoration: "none",
       flexShrink: 0,
-      maxWidth: isSmallMobile ? '100px' : '150px'
+      maxWidth: isSmallMobile ? "100px" : "150px",
     },
     // Desktop Navigation Links
     navLinks: {
-      display: isMobile ? 'none' : 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      marginLeft: '1rem'
+      display: isMobile ? "none" : "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      marginLeft: "1rem",
     },
     link: {
-      color: '#ffffff',
-      textDecoration: 'none',
-      fontSize: isSmallMobile ? '0.9rem' : '1rem',
-      padding: isSmallMobile ? '0.4rem 0.6rem' : '0.5rem 1rem',
-      borderRadius: '4px',
-      transition: 'all 0.3s ease',
-      fontWeight: '500',
-      whiteSpace: 'nowrap',
-      backgroundColor: 'transparent',
-      ':hover': {
-        backgroundColor: isDarkMode ? '#404040' : '#ff4d7a',
-      }
+      color: "#ffffff",
+      textDecoration: "none",
+      fontSize: isSmallMobile ? "0.9rem" : "1rem",
+      padding: isSmallMobile ? "0.4rem 0.6rem" : "0.5rem 1rem",
+      borderRadius: "4px",
+      transition: "all 0.3s ease",
+      fontWeight: "500",
+      whiteSpace: "nowrap",
+      backgroundColor: "transparent",
+      ":hover": {
+        backgroundColor: isDarkMode ? "#404040" : "#ff4d7a",
+      },
     },
     cartLink: {
-      color: '#ffffff',
-      textDecoration: 'none',
-      fontSize: isSmallMobile ? '1rem' : '1.2rem',
-      position: 'relative',
-      padding: isSmallMobile ? '0.4rem' : '0.5rem',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'all 0.3s ease',
+      color: "#ffffff",
+      textDecoration: "none",
+      fontSize: isSmallMobile ? "1rem" : "1.2rem",
+      position: "relative",
+      padding: isSmallMobile ? "0.4rem" : "0.5rem",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      transition: "all 0.3s ease",
       flexShrink: 0,
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
+      border: "none",
+      cursor: "pointer",
     },
     cartCount: {
-      position: 'absolute',
-      top: '-5px',
-      right: '-5px',
-      backgroundColor: isDarkMode ? '#f5346b' : '#333333',
-      color: '#ffffff',
-      borderRadius: '50%',
-      padding: '2px 6px',
-      fontSize: isSmallMobile ? '0.6rem' : '0.8rem',
-      minWidth: '16px',
-      height: '16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      textAlign: 'center',
-      fontWeight: '600',
+      position: "absolute",
+      top: "-5px",
+      right: "-5px",
+      backgroundColor: isDarkMode ? "#f5346b" : "#333333",
+      color: "#ffffff",
+      borderRadius: "50%",
+      padding: "2px 6px",
+      fontSize: isSmallMobile ? "0.6rem" : "0.8rem",
+      minWidth: "16px",
+      height: "16px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      fontWeight: "600",
     },
     menuButton: {
-      display: isMobile ? 'flex' : 'none',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'none',
-      fontSize: isSmallMobile ? '1.2rem' : '1.5rem',
-      cursor: 'pointer',
-      color: '#ffffff',
-      padding: isSmallMobile ? '0.3rem' : '0.5rem',
-      transition: 'all 0.3s ease',
-      borderRadius: '4px',
+      display: isMobile ? "flex" : "none",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "none",
+      fontSize: isSmallMobile ? "1.2rem" : "1.5rem",
+      cursor: "pointer",
+      color: "#ffffff",
+      padding: isSmallMobile ? "0.3rem" : "0.5rem",
+      transition: "all 0.3s ease",
+      borderRadius: "4px",
       flexShrink: 0,
-      minWidth: isSmallMobile ? '32px' : '40px',
-      minHeight: isSmallMobile ? '32px' : '40px',
-      border: 'none',
-      order: isMobile ? 1 : 'auto' // Place hamburger first on mobile
+      minWidth: isSmallMobile ? "32px" : "40px",
+      minHeight: isSmallMobile ? "32px" : "40px",
+      border: "none",
+      order: isMobile ? 1 : "auto", // Place hamburger first on mobile
     },
     mobileSearchButton: {
-      display: isMobile ? 'flex' : 'none',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'none',
-      fontSize: isSmallMobile ? '1rem' : '1.2rem',
-      cursor: 'pointer',
-      color: '#ffffff',
-      padding: isSmallMobile ? '0.3rem' : '0.5rem',
-      transition: 'all 0.3s ease',
-      borderRadius: '4px',
+      display: isMobile ? "flex" : "none",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "none",
+      fontSize: isSmallMobile ? "1rem" : "1.2rem",
+      cursor: "pointer",
+      color: "#ffffff",
+      padding: isSmallMobile ? "0.3rem" : "0.5rem",
+      transition: "all 0.3s ease",
+      borderRadius: "4px",
       flexShrink: 0,
-      minWidth: isSmallMobile ? '32px' : '40px',
-      minHeight: isSmallMobile ? '32px' : '40px',
-      border: 'none'
+      minWidth: isSmallMobile ? "32px" : "40px",
+      minHeight: isSmallMobile ? "32px" : "40px",
+      border: "none",
     },
     rightSection: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: isSmallMobile ? '0.1rem' : '0.5rem',
+      display: "flex",
+      alignItems: "center",
+      gap: isSmallMobile ? "0.1rem" : "0.5rem",
       flexShrink: 0,
-      order: isMobile ? 3 : 'auto' // Place icons after hamburger on mobile
+      order: isMobile ? 3 : "auto", // Place icons after hamburger on mobile
     },
     desktopSearchWrapper: {
       flex: 1,
-      maxWidth: '500px',
-      margin: '0 1rem',
-      minWidth: '200px'
+      maxWidth: "500px",
+      margin: "0 1rem",
+      minWidth: "200px",
     },
     mobileSearchWrapper: {
-      width: '100%',
-      padding: '0.75rem',
-      boxSizing: 'border-box',
-      position: 'absolute',
-      top: '100%',
+      width: "100%",
+      padding: "0.75rem",
+      boxSizing: "border-box",
+      position: "absolute",
+      top: "100%",
       left: 0,
-      backgroundColor: isDarkMode ? '#2d2d2d' : '#f5346b',
+      backgroundColor: isDarkMode ? "#2d2d2d" : "#f5346b",
       zIndex: 1001,
-      boxShadow: isDarkMode ? '0 4px 8px rgba(0,0,0,0.3)' : '0 4px 8px rgba(0,0,0,0.1)',
-      borderBottomLeftRadius: '8px',
-      borderBottomRightRadius: '8px',
-      border: 'none'
+      boxShadow: isDarkMode
+        ? "0 4px 8px rgba(0,0,0,0.3)"
+        : "0 4px 8px rgba(0,0,0,0.1)",
+      borderBottomLeftRadius: "8px",
+      borderBottomRightRadius: "8px",
+      border: "none",
     },
     mobileMenu: {
-      position: 'fixed',
-      top: isSmallMobile ? '55px' : '65px',
+      position: "fixed",
+      top: isSmallMobile ? "55px" : "65px",
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: isDarkMode ? '#2d2d2d' : '#f5346b',
-      display: isMenuOpen ? 'flex' : 'none',
-      flexDirection: 'column',
-      padding: isSmallMobile ? '1rem' : '2rem',
+      backgroundColor: isDarkMode ? "#2d2d2d" : "#f5346b",
+      display: isMenuOpen ? "flex" : "none",
+      flexDirection: "column",
+      padding: isSmallMobile ? "1rem" : "2rem",
       zIndex: 999,
-      overflowY: 'auto',
-      animation: 'slideDown 0.3s ease',
-      boxSizing: 'border-box',
-      borderTopWidth: '1px',
-      borderTopStyle: 'solid',
-      borderTopColor: isDarkMode ? '#404040' : '#ff6b8a',
-      borderBottomWidth: '0',
-      borderLeftWidth: '0',
-      borderRightWidth: '0'
+      overflowY: "auto",
+      animation: "slideDown 0.3s ease",
+      boxSizing: "border-box",
+      borderTopWidth: "1px",
+      borderTopStyle: "solid",
+      borderTopColor: isDarkMode ? "#404040" : "#ff6b8a",
+      borderBottomWidth: "0",
+      borderLeftWidth: "0",
+      borderRightWidth: "0",
     },
     mobileNavLinks: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: isSmallMobile ? '0.5rem' : '1rem',
-      marginBottom: isSmallMobile ? '1rem' : '2rem'
+      display: "flex",
+      flexDirection: "column",
+      gap: isSmallMobile ? "0.5rem" : "1rem",
+      marginBottom: isSmallMobile ? "1rem" : "2rem",
     },
     mobileLink: {
-      color: '#ffffff',
-      textDecoration: 'none',
-      fontSize: isSmallMobile ? '1rem' : '1.2rem',
-      padding: isSmallMobile ? '0.6rem' : '1rem',
-      borderRadius: '8px',
-      transition: 'all 0.3s ease',
-      fontWeight: '500',
-      textAlign: 'center',
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      width: '100%',
-      boxSizing: 'border-box',
-      border: 'none',
-      cursor: 'pointer',
-      display: 'block'
+      color: "#ffffff",
+      textDecoration: "none",
+      fontSize: isSmallMobile ? "1rem" : "1.2rem",
+      padding: isSmallMobile ? "0.6rem" : "1rem",
+      borderRadius: "8px",
+      transition: "all 0.3s ease",
+      fontWeight: "500",
+      textAlign: "center",
+      backgroundColor: "rgba(255,255,255,0.1)",
+      width: "100%",
+      boxSizing: "border-box",
+      border: "none",
+      cursor: "pointer",
+      display: "block",
     },
     mobileActions: {
-      display: 'flex',
-      justifyContent: 'space-around',
-      gap: isSmallMobile ? '0.5rem' : '1rem',
-      marginTop: isSmallMobile ? '0.5rem' : '1.5rem',
-      paddingTop: isSmallMobile ? '0.5rem' : '1.5rem',
-      borderTopWidth: '1px',
-      borderTopStyle: 'solid',
-      borderTopColor: 'rgba(255,255,255,0.2)',
-      borderBottomWidth: '0',
-      borderLeftWidth: '0',
-      borderRightWidth: '0',
-      flexWrap: 'wrap'
+      display: "flex",
+      justifyContent: "space-around",
+      gap: isSmallMobile ? "0.5rem" : "1rem",
+      marginTop: isSmallMobile ? "0.5rem" : "1.5rem",
+      paddingTop: isSmallMobile ? "0.5rem" : "1.5rem",
+      borderTopWidth: "1px",
+      borderTopStyle: "solid",
+      borderTopColor: "rgba(255,255,255,0.2)",
+      borderBottomWidth: "0",
+      borderLeftWidth: "0",
+      borderRightWidth: "0",
+      flexWrap: "wrap",
     },
     mobileActionItem: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: '0.3rem',
-      color: '#ffffff',
-      textDecoration: 'none',
-      minWidth: '60px',
-      backgroundColor: 'transparent',
-      border: 'none',
-      cursor: 'pointer'
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "0.3rem",
+      color: "#ffffff",
+      textDecoration: "none",
+      minWidth: "60px",
+      backgroundColor: "transparent",
+      border: "none",
+      cursor: "pointer",
     },
     mobileActionIcon: {
-      fontSize: isSmallMobile ? '1.2rem' : '1.5rem'
+      fontSize: isSmallMobile ? "1.2rem" : "1.5rem",
     },
     mobileActionLabel: {
-      fontSize: isSmallMobile ? '0.7rem' : '0.8rem',
-      whiteSpace: 'nowrap'
+      fontSize: isSmallMobile ? "0.7rem" : "0.8rem",
+      whiteSpace: "nowrap",
     },
     overlay: {
-      position: 'fixed',
+      position: "fixed",
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: "rgba(0,0,0,0.5)",
       zIndex: 998,
-      display: isMenuOpen ? 'block' : 'none',
-      border: 'none'
-    }
+      display: isMenuOpen ? "block" : "none",
+      border: "none",
+    },
   };
 
   // Add keyframes for animations
@@ -366,7 +380,7 @@ const Navbar = () => {
         }
       }
     `;
-    
+
     try {
       styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
     } catch (e) {
@@ -379,7 +393,7 @@ const Navbar = () => {
       <nav ref={navbarRef} style={themeStyles.navbar}>
         <div style={themeStyles.navContainer}>
           {/* Hamburger Menu - First on Mobile */}
-          <button 
+          <button
             style={themeStyles.menuButton}
             onClick={() => {
               setIsMenuOpen(!isMenuOpen);
@@ -392,20 +406,24 @@ const Navbar = () => {
 
           {/* Logo - Second on Mobile */}
           <Link to="/" style={themeStyles.logoContainer}>
-            <img 
+            <img
               src="/assets/images/Logo.png"
-              alt="Neckline Cosmetic" 
+              alt="Neckline Cosmetic"
               style={themeStyles.logo}
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = "https://via.placeholder.com/120x40/f8f8f8/e88ca6?text=NC";
+                e.target.src =
+                  "https://via.placeholder.com/120x40/f8f8f8/e88ca6?text=NC";
               }}
             />
           </Link>
 
           {/* Desktop Search Bar */}
           {!isMobile && (
-            <div style={themeStyles.desktopSearchWrapper} className="search-bar-container">
+            <div
+              style={themeStyles.desktopSearchWrapper}
+              className="search-bar-container"
+            >
               <SearchBar />
             </div>
           )}
@@ -413,10 +431,18 @@ const Navbar = () => {
           {/* Desktop Navigation Links */}
           {!isMobile && (
             <div style={themeStyles.navLinks}>
-              <Link to="/shop" style={themeStyles.link}>Shop</Link>
-              <Link to="/about" style={themeStyles.link}>About</Link>
-              <Link to="/blog" style={themeStyles.link}>Blog</Link>
-              <Link to="/contact" style={themeStyles.link}>Contact</Link>
+              <Link to="/shop" style={themeStyles.link}>
+                Shop
+              </Link>
+              <Link to="/about" style={themeStyles.link}>
+                About
+              </Link>
+              <Link to="/blog" style={themeStyles.link}>
+                Blog
+              </Link>
+              <Link to="/contact" style={themeStyles.link}>
+                Contact
+              </Link>
             </div>
           )}
 
@@ -424,7 +450,7 @@ const Navbar = () => {
           <div style={themeStyles.rightSection}>
             {/* Mobile Search Toggle */}
             {isMobile && (
-              <button 
+              <button
                 ref={searchButtonRef}
                 style={themeStyles.mobileSearchButton}
                 onClick={toggleMobileSearch}
@@ -434,9 +460,23 @@ const Navbar = () => {
               </button>
             )}
 
-            {/* Mobile Icons - Always visible on mobile */}
-            {isMobile && (
+            {/* Desktop Icons - Only shown on desktop */}
+            {!isMobile && (
               <>
+                {user ? (
+                  <>
+                    <Link to="/profile" style={themeStyles.cartLink}>
+                      <FaUser />
+                    </Link>
+                    <button onClick={logout} style={themeStyles.cartLink}>
+                      <FaSignOutAlt />
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/login" style={themeStyles.link}>
+                    Login
+                  </Link>
+                )}
                 <WishlistButton />
                 <Link to="/cart" style={themeStyles.cartLink}>
                   <FaShoppingCart />
@@ -448,17 +488,11 @@ const Navbar = () => {
               </>
             )}
 
-            {/* Desktop Icons */}
-            {!isMobile && (
+            {/* Mobile Icons - Will be shown in mobile menu only */}
+            {isMobile && (
               <>
-                <WishlistButton />
-                <Link to="/cart" style={themeStyles.cartLink}>
-                  <FaShoppingCart />
-                  {getCartCount() > 0 && (
-                    <span style={themeStyles.cartCount}>{getCartCount()}</span>
-                  )}
-                </Link>
-                <ThemeToggle />
+                {/* These icons will be shown in the mobile menu dropdown */}
+                {/* No icons here - they will be in mobileActions below */}
               </>
             )}
           </div>
@@ -466,8 +500,8 @@ const Navbar = () => {
 
         {/* Mobile Search Bar (when toggled) */}
         {isMobile && showMobileSearch && (
-          <div 
-            style={themeStyles.mobileSearchWrapper} 
+          <div
+            style={themeStyles.mobileSearchWrapper}
             className="search-bar-container"
             onClick={(e) => e.stopPropagation()}
           >
@@ -483,25 +517,123 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isMobile && (
-        <div 
+        <div
           ref={mobileMenuRef}
-          style={themeStyles.mobileMenu} 
+          style={themeStyles.mobileMenu}
           className="mobile-menu"
           onClick={(e) => e.stopPropagation()}
         >
           <div style={themeStyles.mobileNavLinks}>
-            <Link to="/shop" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+            <Link
+              to="/shop"
+              style={themeStyles.mobileLink}
+              onClick={handleLinkClick}
+            >
               Shop
             </Link>
-            <Link to="/about" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+            <Link
+              to="/about"
+              style={themeStyles.mobileLink}
+              onClick={handleLinkClick}
+            >
               About
             </Link>
-            <Link to="/blog" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+            <Link
+              to="/blog"
+              style={themeStyles.mobileLink}
+              onClick={handleLinkClick}
+            >
               Blog
             </Link>
-            <Link to="/contact" style={themeStyles.mobileLink} onClick={handleLinkClick}>
+            <Link
+              to="/contact"
+              style={themeStyles.mobileLink}
+              onClick={handleLinkClick}
+            >
               Contact
             </Link>
+          </div>
+
+          {/* Mobile Action Icons */}
+          <div style={themeStyles.mobileActions}>
+            {!user ? (
+              <Link
+                to="/login"
+                style={themeStyles.mobileActionItem}
+                onClick={handleLinkClick}
+              >
+                <FaUser style={themeStyles.mobileActionIcon} />
+                <span style={themeStyles.mobileActionLabel}>Login</span>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/profile"
+                  style={themeStyles.mobileActionItem}
+                  onClick={handleLinkClick}
+                >
+                  <FaUser style={themeStyles.mobileActionIcon} />
+                  <span style={themeStyles.mobileActionLabel}>Profile</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    handleLinkClick();
+                  }}
+                  style={themeStyles.mobileActionItem}
+                >
+                  <FaSignOutAlt style={themeStyles.mobileActionIcon} />
+                  <span style={themeStyles.mobileActionLabel}>Logout</span>
+                </button>
+              </>
+            )}
+            
+            <Link
+              to="/wishlist"
+              style={themeStyles.mobileActionItem}
+              onClick={handleLinkClick}
+            >
+              <WishlistButton />
+              <span style={themeStyles.mobileActionLabel}>Wishlist</span>
+            </Link>
+            
+            <Link
+              to="/cart"
+              style={themeStyles.mobileActionItem}
+              onClick={handleLinkClick}
+            >
+              <div style={{ position: "relative" }}>
+                <FaShoppingCart style={themeStyles.mobileActionIcon} />
+                {getCartCount() > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "-8px",
+                      backgroundColor: isDarkMode ? "#f5346b" : "#333333",
+                      color: "#ffffff",
+                      borderRadius: "50%",
+                      padding: "2px 4px",
+                      fontSize: "0.6rem",
+                      minWidth: "16px",
+                      height: "16px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {getCartCount()}
+                  </span>
+                )}
+              </div>
+              <span style={themeStyles.mobileActionLabel}>Cart</span>
+            </Link>
+            
+            <div style={themeStyles.mobileActionItem}>
+              <ThemeToggle />
+              <span style={themeStyles.mobileActionLabel}>Theme</span>
+            </div>
           </div>
         </div>
       )}

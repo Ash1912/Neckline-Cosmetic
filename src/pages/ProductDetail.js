@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
@@ -7,7 +7,12 @@ import { products } from '../data/products';
 import ImageGallery from '../components/ImageGallery';
 import ProductTabs from '../components/ProductTabs';
 import ShadeCatalog from '../components/ShadeCatalog';
-import { FaShoppingCart, FaHeart, FaRegHeart, FaShare, FaStar } from 'react-icons/fa';
+import { 
+  FaShoppingCart, FaHeart, FaRegHeart, FaShare, FaStar,
+  FaCheckCircle, FaTruck, FaShieldAlt, FaUndo, FaArrowLeft 
+} from 'react-icons/fa';
+import { usePixelTracking } from '../context/PixelContext';
+import SEO from '../components/SEO';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -21,8 +26,19 @@ const ProductDetail = () => {
 
   const [selectedShade, setSelectedShade] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const trackEvent = usePixelTracking();
 
-  // Helper functions for styles - defined BEFORE they are used
+  // Track when product page is viewed
+  useEffect(() => {
+    if (product) {
+      trackEvent.viewContent(product);
+      // Scroll to top when product changes
+      window.scrollTo(0, 0);
+    }
+  }, [product, trackEvent]);
+
+  // Helper functions for styles
   const getNotFoundStyles = (isDarkMode) => ({
     textAlign: 'center',
     padding: '4rem 1rem',
@@ -67,7 +83,9 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     addToCart(product, selectedShade || (Array.isArray(product.shades) ? product.shades[0] : '') || '', quantity);
-    alert('Added to cart!');
+    trackEvent.addToCart(product, quantity);
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 3000);
   };
 
   const handleQuantityChange = (delta) => {
@@ -91,11 +109,6 @@ const ProductDetail = () => {
     }
   };
 
-  // const handleDownloadCatalog = () => {
-  //   // Implement catalog download functionality
-  //   window.open(`/catalogs/${product.category.toLowerCase()}.pdf`, '_blank');
-  // };
-
   // Calculate discount
   const discount = product.mrp && product.mrp > product.price 
     ? Math.round(((product.mrp - product.price) / product.mrp) * 100) 
@@ -110,28 +123,56 @@ const ProductDetail = () => {
       color: isDarkMode ? '#ffffff' : '#333333',
       minHeight: '100vh'
     },
+    
+    // Back Button
+    backButton: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginBottom: '1.5rem',
+      padding: '0.5rem 1rem',
+      backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
+      border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+      borderRadius: '2rem',
+      color: isDarkMode ? '#ffffff' : '#333333',
+      textDecoration: 'none',
+      fontSize: '0.95rem',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      width: 'fit-content',
+      ':hover': {
+        backgroundColor: '#e88ca6',
+        color: '#ffffff',
+        borderColor: '#e88ca6'
+      }
+    },
+
     productGrid: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: '3rem',
       marginBottom: '2rem'
     },
+    
     info: {
       display: 'flex',
       flexDirection: 'column'
     },
+    
     header: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: '1rem'
     },
+    
     category: {
       fontSize: '0.9rem',
       color: '#e88ca6',
       textTransform: 'uppercase',
       letterSpacing: '0.5px'
     },
+    
     wishlistButton: {
       background: 'none',
       border: 'none',
@@ -144,53 +185,64 @@ const ProductDetail = () => {
         color: '#e88ca6'
       }
     },
+    
     name: {
       fontSize: '2rem',
       marginBottom: '0.5rem',
       color: isDarkMode ? '#ffffff' : '#333333',
       fontWeight: '700'
     },
+    
     itemNo: {
       fontSize: '0.9rem',
       color: isDarkMode ? '#cccccc' : '#666666',
       marginBottom: '1rem'
     },
+    
     rating: {
       display: 'flex',
       alignItems: 'center',
       gap: '1rem',
       marginBottom: '1rem'
     },
+    
     stars: {
       display: 'flex',
       gap: '0.2rem',
       color: '#ffc107'
     },
+    
     reviews: {
       color: isDarkMode ? '#cccccc' : '#666666',
       fontSize: '0.9rem'
     },
+    
     priceContainer: {
       display: 'flex',
       alignItems: 'center',
       gap: '1rem',
-      marginBottom: '1.5rem'
+      marginBottom: '1.5rem',
+      flexWrap: 'wrap'
     },
+    
     price: {
       fontSize: '2rem',
       fontWeight: 'bold',
       color: '#e88ca6'
     },
+    
     mrp: {
       fontSize: '1.2rem',
       color: isDarkMode ? '#999999' : '#999999',
       textDecoration: 'line-through'
     },
+    
     discount: {
       fontSize: '1.1rem',
       color: '#4caf50',
       fontWeight: '600'
     },
+    
     stock: {
       display: 'inline-block',
       padding: '0.25rem 1rem',
@@ -201,9 +253,11 @@ const ProductDetail = () => {
       backgroundColor: product.inStock ? '#4caf50' : '#ff4444',
       color: '#ffffff'
     },
+    
     shadeSection: {
       marginBottom: '2rem'
     },
+    
     shadeLabel: {
       display: 'block',
       fontSize: '1rem',
@@ -211,11 +265,13 @@ const ProductDetail = () => {
       marginBottom: '0.5rem',
       fontWeight: '600'
     },
+    
     shadeOptions: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: '0.5rem'
     },
+    
     shadeButton: {
       padding: '0.5rem 1rem',
       border: `1px solid ${isDarkMode ? '#404040' : '#ddd'}`,
@@ -225,14 +281,17 @@ const ProductDetail = () => {
       cursor: 'pointer',
       transition: 'all 0.3s'
     },
+    
     shadeButtonSelected: {
       borderColor: '#e88ca6',
       backgroundColor: isDarkMode ? '#404040' : '#f8f8f8',
       color: '#e88ca6'
     },
+    
     quantitySection: {
       marginBottom: '2rem'
     },
+    
     quantityLabel: {
       display: 'block',
       fontSize: '1rem',
@@ -240,11 +299,13 @@ const ProductDetail = () => {
       marginBottom: '0.5rem',
       fontWeight: '600'
     },
+    
     quantityControl: {
       display: 'flex',
       alignItems: 'center',
       gap: '1rem'
     },
+    
     quantityButton: {
       width: '40px',
       height: '40px',
@@ -254,23 +315,27 @@ const ProductDetail = () => {
       borderRadius: '4px',
       fontSize: '1.2rem',
       cursor: 'pointer',
-      transition: 'background-color 0.3s',
+      transition: 'all 0.3s',
       ':hover': {
         backgroundColor: '#e88ca6',
-        color: '#ffffff'
+        color: '#ffffff',
+        borderColor: '#e88ca6'
       }
     },
+    
     quantityValue: {
       fontSize: '1.2rem',
       minWidth: '40px',
       textAlign: 'center',
       color: isDarkMode ? '#ffffff' : '#333333'
     },
+    
     actionButtons: {
       display: 'flex',
       gap: '1rem',
       marginBottom: '1rem'
     },
+    
     addToCartButton: {
       flex: 2,
       padding: '1rem',
@@ -290,6 +355,7 @@ const ProductDetail = () => {
         transform: 'translateY(-2px)'
       }
     },
+    
     shareButton: {
       flex: 1,
       padding: '1rem',
@@ -310,52 +376,102 @@ const ProductDetail = () => {
         borderColor: '#e88ca6'
       }
     },
-    catalogButton: {
-      width: '100%',
+
+    // Success Message
+    successMessage: {
+      marginTop: '1rem',
       padding: '0.75rem',
-      backgroundColor: 'transparent',
-      color: '#e88ca6',
-      border: `2px solid #e88ca6`,
+      backgroundColor: '#4caf50',
+      color: '#ffffff',
       borderRadius: '4px',
-      fontSize: '1rem',
-      cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '0.5rem',
-      transition: 'all 0.3s ease',
-      ':hover': {
-        backgroundColor: '#e88ca6',
-        color: '#ffffff'
-      }
+      animation: 'slideIn 0.3s ease'
     },
+    
     keyFeatures: {
       marginTop: '2rem',
       padding: '1.5rem',
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
       borderRadius: '8px'
     },
+    
     featureTitle: {
       fontSize: '1.1rem',
       fontWeight: '600',
       marginBottom: '1rem',
       color: isDarkMode ? '#ffffff' : '#333333'
     },
+    
     featureList: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
       gap: '0.5rem'
     },
+    
     featureItem: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.5rem',
       color: isDarkMode ? '#cccccc' : '#666666'
+    },
+
+    // Delivery Info
+    deliveryInfo: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: '1rem',
+      marginTop: '2rem',
+      padding: '1.5rem',
+      backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
+      borderRadius: '8px'
+    },
+    
+    deliveryItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+      color: isDarkMode ? '#cccccc' : '#666666',
+      fontSize: '0.9rem'
+    },
+    
+    deliveryIcon: {
+      fontSize: '1.5rem',
+      color: '#e88ca6'
     }
   };
 
   return (
     <div style={themeStyles.container}>
+      {/* Enhanced SEO with product schema */}
+      <SEO 
+        title={product.name}
+        description={product.description}
+        keywords={[
+          product.category,
+          product.type,
+          product.name,
+          'cosmetics',
+          'makeup',
+          'beauty products',
+          ...(product.benefits || [])
+        ]}
+        image={product.image}
+        url={`/product/${product.id}`}
+        type="product"
+        product={product}
+      />
+      
+      {/* Back Button */}
+      <button 
+        onClick={() => navigate(-1)} 
+        style={themeStyles.backButton}
+      >
+        <FaArrowLeft /> Back
+      </button>
+
       <div style={themeStyles.productGrid}>
         {/* Left Column - Image Gallery */}
         <ImageGallery
@@ -368,10 +484,13 @@ const ProductDetail = () => {
         {/* Right Column - Product Info */}
         <div style={themeStyles.info}>
           <div style={themeStyles.header}>
-            <span style={themeStyles.category}>{product.category} / {product.subCategory}</span>
+            <span style={themeStyles.category}>
+              {product.category} {product.subCategory && `/ ${product.subCategory}`}
+            </span>
             <button
               style={themeStyles.wishlistButton}
               onClick={() => toggleWishlist(product)}
+              aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
             >
               {inWishlist ? <FaHeart /> : <FaRegHeart />}
             </button>
@@ -451,6 +570,7 @@ const ProductDetail = () => {
               <button
                 style={themeStyles.quantityButton}
                 onClick={() => handleQuantityChange(-1)}
+                disabled={quantity <= 1}
               >
                 -
               </button>
@@ -476,11 +596,12 @@ const ProductDetail = () => {
             </button>
           </div>
 
-          {/* Download Catalog Button */}
-          {/* <button style={themeStyles.catalogButton} onClick={handleDownloadCatalog}>
-            <FaDownload />
-            Download Product Catalog
-          </button> */}
+          {/* Success Message */}
+          {addedToCart && (
+            <div style={themeStyles.successMessage}>
+              <FaCheckCircle /> Added to cart successfully!
+            </div>
+          )}
 
           {/* Key Features */}
           {product.benefits && (
@@ -496,6 +617,22 @@ const ProductDetail = () => {
               </div>
             </div>
           )}
+
+          {/* Delivery Information */}
+          <div style={themeStyles.deliveryInfo}>
+            <div style={themeStyles.deliveryItem}>
+              <FaTruck style={themeStyles.deliveryIcon} />
+              <span>Free shipping on orders above ₹500</span>
+            </div>
+            <div style={themeStyles.deliveryItem}>
+              <FaShieldAlt style={themeStyles.deliveryIcon} />
+              <span>100% authentic products</span>
+            </div>
+            <div style={themeStyles.deliveryItem}>
+              <FaUndo style={themeStyles.deliveryIcon} />
+              <span>30-day return policy</span>
+            </div>
+          </div>
         </div>
       </div>
 

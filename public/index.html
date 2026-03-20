@@ -3,41 +3,148 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/Logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/Logo.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="theme-color" content="#f5346b" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Neckline Cosmetic - Premium Color Cosmetics & Beauty Products</title>
+    <meta name="title" content="Neckline Cosmetic - Premium Color Cosmetics & Beauty Products">
+    <meta name="description" content="Discover premium quality, cruelty-free color cosmetics at Neckline Cosmetic. Shop our wide range of lipsticks, foundations, eyeliners, and more. 100% authentic products with free shipping on orders above ₹500." />
+    <meta name="keywords" content="cosmetics, makeup, lipstick, foundation, eyeliner, mascara, kajal, sindoor, nail paint, cruelty-free cosmetics, Indian makeup brand, Neckline cosmetic, beauty products" />
+    <meta name="author" content="Neckline Cosmetic" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+    <meta name="distribution" content="global" />
+    <meta name="rating" content="general" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.necklinecosmetic.com/" />
+    <meta property="og:title" content="Neckline Cosmetic - Premium Color Cosmetics & Beauty Products" />
+    <meta property="og:description" content="Discover premium quality, cruelty-free color cosmetics at Neckline Cosmetic. Shop our wide range of lipsticks, foundations, eyeliners, and more." />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Neckline Cosmetic" />
+    <meta property="og:locale" content="en_IN" />
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>Neckline Cosmetic</title>
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.necklinecosmetic.com/" />
+    <meta name="twitter:title" content="Neckline Cosmetic - Premium Color Cosmetics & Beauty Products" />
+    <meta name="twitter:description" content="Discover premium quality, cruelty-free color cosmetics at Neckline Cosmetic. Shop our wide range of lipsticks, foundations, eyeliners, and more." />
+    <meta name="twitter:image" content="%PUBLIC_URL%/twitter-image.jpg" />
+
+    <!-- Additional SEO Meta Tags -->
+    <meta name="geo.region" content="IN-DL" />
+    <meta name="geo.placename" content="Delhi" />
+    <meta name="geo.position" content="28.7041;77.1025" />
+    <meta name="ICBM" content="28.7041, 77.1025" />
+    
+    <!-- Mobile App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Neckline Cosmetic" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Favicon and App Icons -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/Logo.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/apple-touch-icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
+    
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect to External Domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    
+    <!-- Font Awesome (Optional) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- ❌ ALL TRACKING CODE REMOVED - No Facebook Pixel, No Google Analytics -->
+    
+    <!-- Schema.org Markup for Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Neckline Cosmetic",
+      "url": "https://www.necklinecosmetic.com",
+      "logo": "https://www.necklinecosmetic.com/logo.png",
+      "sameAs": [
+        "https://www.facebook.com/necklinecosmetics",
+        "https://www.instagram.com/necklinecosmetics",
+        "https://twitter.com/necklinecosmetic"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+91-9911150517",
+        "contactType": "customer service",
+        "areaServed": "IN",
+        "availableLanguage": ["en", "hi"]
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "J-34 Sec-2, Bawana Industrial Area",
+        "addressLocality": "Delhi",
+        "postalCode": "110039",
+        "addressCountry": "IN"
+      }
+    }
+    </script>
+    
+    <!-- Product Schema for E-commerce -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      "name": "Neckline Cosmetic",
+      "description": "Premium quality, cruelty-free color cosmetics",
+      "priceRange": "₹15 - ₹999",
+      "paymentAccepted": ["Cash", "Credit Card", "Debit Card", "UPI", "Paytm", "PhonePe", "Google Pay"],
+      "currenciesAccepted": "INR",
+      "openingHours": "Mo-Fr 09:00-20:00 Sa 10:00-18:00",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.necklinecosmetic.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.necklinecosmetic.com/" />
+    
+    <!-- Alternate language versions -->
+    <link rel="alternate" href="https://www.necklinecosmetic.com/" hreflang="x-default" />
+    <link rel="alternate" href="https://www.necklinecosmetic.com/hi" hreflang="hi" />
+    
+    <!-- Verification for Google Search Console (Optional) -->
+    <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
+    
+    <!-- Verification for Bing Webmaster Tools (Optional) -->
+    <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+    
+    <!-- Structured Data for Breadcrumbs (will be updated dynamically by React) -->
+    <script type="application/ld+json" id="breadcrumb-schema">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": []
+    }
+    </script>
   </body>
 </html>

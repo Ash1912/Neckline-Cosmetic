@@ -2,15 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
+import SEO from '../components/SEO';
 import ProductCard from '../components/ProductCard';
 import { products } from '../data/products';
-import { FaSearch, FaFilter } from 'react-icons/fa';
+import { 
+  FaSearch, FaFilter, FaChevronLeft, FaChevronRight 
+} from 'react-icons/fa';
+import { usePixelTracking } from '../context/PixelContext';
 
 const SearchPage = () => {
   const { isDarkMode } = useTheme();
   const { addToCart } = useCart();
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  const trackEvent = usePixelTracking();
   
   const [searchResults, setSearchResults] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
@@ -18,6 +23,23 @@ const SearchPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
   const [showFilters, setShowFilters] = useState(false);
+  const [searchTracked, setSearchTracked] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+
+  // Track search event when query changes
+  useEffect(() => {
+    if (query && !searchTracked && filteredResults.length > 0) {
+      trackEvent.search(query, filteredResults.length);
+      setSearchTracked(true);
+    }
+  }, [query, filteredResults.length, trackEvent, searchTracked]);
+
+  // Scroll to top when query changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setCurrentPage(1);
+  }, [query]);
 
   // Search function with SEO optimization
   useEffect(() => {
@@ -66,7 +88,8 @@ const SearchPage = () => {
       const seoKeywords = [
         'makeup', 'cosmetics', 'beauty', 'skincare', 'organic', 'vegan',
         'cruelty free', 'natural', 'clean beauty', 'foundation', 'lipstick',
-        'mascara', 'serum', 'cleanser', 'moisturizer', 'highlighter'
+        'mascara', 'serum', 'cleanser', 'moisturizer', 'highlighter',
+        'eyeliner', 'kajal', 'sindoor', 'nail paint', 'compact'
       ];
       
       if (seoKeywords.some(k => k.includes(lowercaseQuery))) score += 8;
@@ -88,6 +111,7 @@ const SearchPage = () => {
     });
 
     setSearchResults(results);
+    setSearchTracked(false);
   }, [query]);
 
   // Apply filters and sorting
@@ -113,15 +137,37 @@ const SearchPage = () => {
       case 'name':
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
+      case 'rating':
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
       default:
         // Keep relevance sort
         break;
     }
 
     setFilteredResults(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [searchResults, selectedCategory, priceRange, sortBy]);
 
-  const categories = ['all', 'Face', 'Lips', 'Eyes', 'Skincare'];
+  // Pagination
+  const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
+  const paginatedResults = filteredResults.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const categories = ['all', 'Face', 'Lips', 'Eyes', 'Skincare', 'Sindoor', 'Nails'];
+
+  const clearFilters = () => {
+    setSelectedCategory('all');
+    setPriceRange({ min: 0, max: 1000 });
+    setSortBy('relevance');
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const themeStyles = {
     container: {
@@ -132,6 +178,8 @@ const SearchPage = () => {
       color: isDarkMode ? '#ffffff' : '#333333',
       minHeight: '100vh'
     },
+
+    // Header
     header: {
       marginBottom: '2rem'
     },
@@ -141,7 +189,8 @@ const SearchPage = () => {
       color: isDarkMode ? '#f5346b' : '#333333',
       display: 'flex',
       alignItems: 'center',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      flexWrap: 'wrap'
     },
     query: {
       color: isDarkMode ? '#ffffff' : '#333333',
@@ -151,6 +200,8 @@ const SearchPage = () => {
       color: isDarkMode ? '#cccccc' : '#666666',
       marginBottom: '1rem'
     },
+
+    // Filter Bar
     filterBar: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -168,8 +219,24 @@ const SearchPage = () => {
       border: `1px solid ${isDarkMode ? '#404040' : '#ddd'}`,
       borderRadius: '4px',
       cursor: 'pointer',
-      color: isDarkMode ? '#ffffff' : '#333333'
+      color: isDarkMode ? '#ffffff' : '#333333',
+      transition: 'all 0.3s ease',
+      ':hover': {
+        backgroundColor: '#e88ca6',
+        color: '#ffffff',
+        borderColor: '#e88ca6'
+      }
     },
+    filterSelect: {
+      padding: '0.5rem',
+      backgroundColor: isDarkMode ? '#404040' : '#ffffff',
+      border: `1px solid ${isDarkMode ? '#555' : '#ddd'}`,
+      borderRadius: '4px',
+      color: isDarkMode ? '#ffffff' : '#333333',
+      minWidth: '200px'
+    },
+
+    // Filter Section
     filterSection: {
       backgroundColor: isDarkMode ? '#2d2d2d' : '#f8f8f8',
       padding: '1.5rem',
@@ -187,7 +254,7 @@ const SearchPage = () => {
       marginBottom: '0.5rem',
       color: isDarkMode ? '#cccccc' : '#666666'
     },
-    filterSelect: {
+    filterSelectInline: { // Renamed to avoid duplicate key
       width: '100%',
       padding: '0.5rem',
       backgroundColor: isDarkMode ? '#404040' : '#ffffff',
@@ -203,11 +270,52 @@ const SearchPage = () => {
       borderRadius: '4px',
       color: isDarkMode ? '#ffffff' : '#333333'
     },
+
+    // Active Filters
+    activeFilters: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '0.5rem',
+      marginBottom: '1.5rem'
+    },
+    filterChip: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.25rem 1rem',
+      backgroundColor: isDarkMode ? '#404040' : '#f0f0f0',
+      borderRadius: '2rem',
+      fontSize: '0.9rem',
+      color: isDarkMode ? '#cccccc' : '#666666'
+    },
+    clearChip: {
+      cursor: 'pointer',
+      color: '#f5346b',
+      ':hover': {
+        color: '#ff4d7a'
+      }
+    },
+    clearAllButton: {
+      background: 'none',
+      border: 'none',
+      color: '#f5346b',
+      fontSize: '0.9rem',
+      cursor: 'pointer',
+      textDecoration: 'underline',
+      ':hover': {
+        color: '#ff4d7a'
+      }
+    },
+
+    // Products Grid
     productsGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-      gap: '2rem'
+      gap: '2rem',
+      marginBottom: '2rem'
     },
+
+    // No Results
     noResults: {
       textAlign: 'center',
       padding: '4rem 2rem',
@@ -218,12 +326,56 @@ const SearchPage = () => {
       fontSize: '4rem',
       color: isDarkMode ? '#f5346b' : '#f5346b',
       marginBottom: '1rem'
+    },
+
+    // Pagination
+    pagination: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginTop: '2rem',
+      flexWrap: 'wrap'
+    },
+    pageButton: {
+      minWidth: '40px',
+      height: '40px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isDarkMode ? '#404040' : '#f8f8f8',
+      border: `1px solid ${isDarkMode ? '#555' : '#ddd'}`,
+      borderRadius: '4px',
+      cursor: 'pointer',
+      color: isDarkMode ? '#ffffff' : '#333333',
+      transition: 'all 0.3s ease',
+      ':hover': {
+        backgroundColor: '#e88ca6',
+        color: '#ffffff',
+        borderColor: '#e88ca6'
+      }
+    },
+    activePage: {
+      backgroundColor: '#e88ca6',
+      color: '#ffffff',
+      borderColor: '#e88ca6'
+    },
+    pageDots: {
+      color: isDarkMode ? '#cccccc' : '#666666'
     }
   };
 
   if (!query) {
     return (
       <div style={themeStyles.container}>
+        <SEO 
+          title="Search Products"
+          description="Search for your favorite cosmetics, makeup, and beauty products at Neckline Cosmetic."
+          keywords="search cosmetics, find makeup, beauty products search"
+          url="/search"
+          type="website"
+        />
+        
         <div style={themeStyles.noResults}>
           <FaSearch style={themeStyles.noResultsIcon} />
           <h2>Enter a search term</h2>
@@ -239,12 +391,20 @@ const SearchPage = () => {
 
   return (
     <div style={themeStyles.container}>
+      <SEO 
+        title={`Search results for "${query}"`}
+        description={`Found ${filteredResults.length} products matching "${query}" at Neckline Cosmetic. Shop lipsticks, foundations, eyeliners and more.`}
+        keywords={`${query}, ${query} cosmetics, ${query} makeup, beauty products, cosmetics search`}
+        url={`/search?q=${encodeURIComponent(query)}`}
+        type="website"
+      />
+      
       <div style={themeStyles.header}>
         <h1 style={themeStyles.title}>
           <FaSearch /> Search Results
         </h1>
         <p style={themeStyles.resultsCount}>
-          Found <span style={themeStyles.query}>{filteredResults.length}</span> results for "{query}"
+          Found <span style={themeStyles.query}>{filteredResults.length}</span> result{filteredResults.length !== 1 ? 's' : ''} for "{query}"
         </p>
       </div>
 
@@ -264,6 +424,7 @@ const SearchPage = () => {
           <option value="price-low">Sort by: Price (Low to High)</option>
           <option value="price-high">Sort by: Price (High to Low)</option>
           <option value="name">Sort by: Name</option>
+          <option value="rating">Sort by: Top Rated</option>
         </select>
       </div>
 
@@ -272,7 +433,7 @@ const SearchPage = () => {
           <div>
             <label style={themeStyles.filterLabel}>Category</label>
             <select 
-              style={themeStyles.filterSelect}
+              style={themeStyles.filterSelectInline} // Using renamed style
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
@@ -308,6 +469,40 @@ const SearchPage = () => {
         </div>
       </div>
 
+      {/* Active Filters */}
+      {(selectedCategory !== 'all' || priceRange.min > 0 || priceRange.max < 1000) && (
+        <div style={themeStyles.activeFilters}>
+          {selectedCategory !== 'all' && (
+            <span style={themeStyles.filterChip}>
+              Category: {selectedCategory}
+              <span 
+                style={themeStyles.clearChip}
+                onClick={() => setSelectedCategory('all')}
+              >
+                ×
+              </span>
+            </span>
+          )}
+          {(priceRange.min > 0 || priceRange.max < 1000) && (
+            <span style={themeStyles.filterChip}>
+              Price: ₹{priceRange.min} - ₹{priceRange.max}
+              <span 
+                style={themeStyles.clearChip}
+                onClick={() => setPriceRange({ min: 0, max: 1000 })}
+              >
+                ×
+              </span>
+            </span>
+          )}
+          <button 
+            style={themeStyles.clearAllButton}
+            onClick={clearFilters}
+          >
+            Clear All
+          </button>
+        </div>
+      )}
+
       {filteredResults.length === 0 ? (
         <div style={themeStyles.noResults}>
           <FaSearch style={themeStyles.noResultsIcon} />
@@ -315,15 +510,67 @@ const SearchPage = () => {
           <p>Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div style={themeStyles.productsGrid}>
-          {filteredResults.map(product => (
-            <ProductCard 
-              key={product.id} 
-              product={product}
-              onAddToCart={handleAddToCart}
-            />
-          ))}
-        </div>
+        <>
+          <div style={themeStyles.productsGrid}>
+            {paginatedResults.map(product => (
+              <ProductCard 
+                key={product.id} 
+                product={product}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={themeStyles.pagination}>
+              <button
+                style={themeStyles.pageButton}
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <FaChevronLeft />
+              </button>
+              
+              {[...Array(totalPages)].map((_, i) => {
+                const page = i + 1;
+                // Show first page, last page, and pages around current page
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={page}
+                      style={{
+                        ...themeStyles.pageButton,
+                        ...(currentPage === page ? themeStyles.activePage : {})
+                      }}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  );
+                } else if (
+                  page === currentPage - 2 ||
+                  page === currentPage + 2
+                ) {
+                  return <span key={page} style={themeStyles.pageDots}>...</span>;
+                }
+                return null;
+              })}
+              
+              <button
+                style={themeStyles.pageButton}
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

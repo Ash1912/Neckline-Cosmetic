@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // Add useLocation
 import { useTheme } from '../context/ThemeContext';
 import { 
   FaInstagram, FaFacebook, FaTwitter, FaPinterest, 
-  FaYoutube, FaTiktok, FaEnvelope, FaPhone, FaMapMarkerAlt,
+  FaYoutube, FaEnvelope, FaPhone, FaMapMarkerAlt,
   FaCcVisa, FaCcMastercard, FaCcPaypal, FaCcAmex, FaApple,
   FaGooglePay, FaAmazonPay, FaArrowUp, FaHeart, FaLeaf
 } from 'react-icons/fa';
@@ -11,10 +11,19 @@ import { SiRazorpay, SiPaytm, SiPhonepe } from 'react-icons/si';
 
 const Footer = () => {
   const { isDarkMode } = useTheme();
+  const location = useLocation(); // Add useLocation hook
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [email, setEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth' // Add smooth scrolling
+    });
+  }, [location.pathname]); // Trigger when pathname changes
 
   // Handle window resize
   useEffect(() => {
@@ -46,6 +55,14 @@ const Footer = () => {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle link click with scroll to top
+  const handleLinkClick = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   // Get responsive grid columns
@@ -123,6 +140,7 @@ const Footer = () => {
       display: 'inline-flex',
       alignItems: 'center',
       gap: '0.5rem',
+      cursor: 'pointer',
       ':hover': {
         color: isDarkMode ? '#e88ca6' : '#e88ca6',
         transform: windowWidth <= 768 ? 'none' : 'translateX(5px)'
@@ -294,6 +312,7 @@ const Footer = () => {
       textDecoration: 'none',
       fontSize: windowWidth <= 480 ? '0.8rem' : '0.85rem',
       transition: 'color 0.3s ease',
+      cursor: 'pointer',
       ':hover': {
         color: '#e88ca6'
       }
@@ -399,19 +418,49 @@ const Footer = () => {
             <h3 style={themeStyles.heading}>Quick Links</h3>
             <ul style={themeStyles.list}>
               <li style={themeStyles.listItem}>
-                <Link to="/shop" style={themeStyles.link}>Shop All</Link>
+                <Link 
+                  to="/shop" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Shop All
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/about" style={themeStyles.link}>About Us</Link>
+                <Link 
+                  to="/about" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  About Us
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/blog" style={themeStyles.link}>Blog</Link>
+                <Link 
+                  to="/blog" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Blog
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/contact" style={themeStyles.link}>Contact</Link>
+                <Link 
+                  to="/contact" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Contact
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/wishlist" style={themeStyles.link}>Wishlist</Link>
+                <Link 
+                  to="/wishlist" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Wishlist
+                </Link>
               </li>
             </ul>
           </div>
@@ -421,22 +470,58 @@ const Footer = () => {
             <h3 style={themeStyles.heading}>Categories</h3>
             <ul style={themeStyles.list}>
               <li style={themeStyles.listItem}>
-                <Link to="/shop?category=face" style={themeStyles.link}>Face</Link>
+                <Link 
+                  to="/shop?category=face" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Face
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/shop?category=lips" style={themeStyles.link}>Lips</Link>
+                <Link 
+                  to="/shop?category=lips" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Lips
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/shop?category=eyes" style={themeStyles.link}>Eyes</Link>
+                <Link 
+                  to="/shop?category=eyes" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Eyes
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/shop?category=skincare" style={themeStyles.link}>Skincare</Link>
+                <Link 
+                  to="/shop?category=skincare" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Skincare
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/shop?category=nails" style={themeStyles.link}>Nails</Link>
+                <Link 
+                  to="/shop?category=nails" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Nails
+                </Link>
               </li>
               <li style={themeStyles.listItem}>
-                <Link to="/shop?category=sindoor" style={themeStyles.link}>Sindoor</Link>
+                <Link 
+                  to="/shop?category=sindoor" 
+                  style={themeStyles.link}
+                  onClick={handleLinkClick}
+                >
+                  Sindoor
+                </Link>
               </li>
             </ul>
           </div>
@@ -451,6 +536,7 @@ const Footer = () => {
                 rel="noopener noreferrer" 
                 style={themeStyles.socialLink}
                 aria-label="Instagram"
+                onClick={handleLinkClick}
               >
                 <FaInstagram />
               </a>
@@ -460,6 +546,7 @@ const Footer = () => {
                 rel="noopener noreferrer" 
                 style={themeStyles.socialLink}
                 aria-label="Facebook"
+                onClick={handleLinkClick}
               >
                 <FaFacebook />
               </a>
@@ -469,6 +556,7 @@ const Footer = () => {
                 rel="noopener noreferrer" 
                 style={themeStyles.socialLink}
                 aria-label="Twitter"
+                onClick={handleLinkClick}
               >
                 <FaTwitter />
               </a>
@@ -478,6 +566,7 @@ const Footer = () => {
                 rel="noopener noreferrer" 
                 style={themeStyles.socialLink}
                 aria-label="Pinterest"
+                onClick={handleLinkClick}
               >
                 <FaPinterest />
               </a>
@@ -487,17 +576,9 @@ const Footer = () => {
                 rel="noopener noreferrer" 
                 style={themeStyles.socialLink}
                 aria-label="YouTube"
+                onClick={handleLinkClick}
               >
                 <FaYoutube />
-              </a>
-              <a 
-                href="https://tiktok.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                style={themeStyles.socialLink}
-                aria-label="TikTok"
-              >
-                <FaTiktok />
               </a>
             </div>
 
@@ -526,10 +607,34 @@ const Footer = () => {
             <p>&copy; {new Date().getFullYear()} Neckline Cosmetic. All rights reserved.</p>
           </div>
           <div style={themeStyles.footerLinks}>
-            <Link to="/privacy" style={themeStyles.footerLink}>Privacy Policy</Link>
-            <Link to="/terms" style={themeStyles.footerLink}>Terms of Service</Link>
-            <Link to="/shipping" style={themeStyles.footerLink}>Shipping Policy</Link>
-            <Link to="/returns" style={themeStyles.footerLink}>Returns</Link>
+            <Link 
+              to="/privacy" 
+              style={themeStyles.footerLink}
+              onClick={handleLinkClick}
+            >
+              Privacy Policy
+            </Link>
+            <Link 
+              to="/terms" 
+              style={themeStyles.footerLink}
+              onClick={handleLinkClick}
+            >
+              Terms of Service
+            </Link>
+            <Link 
+              to="/shipping" 
+              style={themeStyles.footerLink}
+              onClick={handleLinkClick}
+            >
+              Shipping Policy
+            </Link>
+            <Link 
+              to="/returns" 
+              style={themeStyles.footerLink}
+              onClick={handleLinkClick}
+            >
+              Returns
+            </Link>
           </div>
         </div>
       </div>

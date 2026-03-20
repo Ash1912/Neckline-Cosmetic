@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
+import SEO from '../components/SEO'; // Add SEO import
 import { 
   FaArrowLeft, FaTruck, FaCreditCard, FaMoneyBill, 
   FaUniversity, FaQrcode, FaLock, FaShieldAlt,
@@ -9,8 +10,10 @@ import {
   FaTimes
 } from 'react-icons/fa';
 import { SiPaytm, SiPhonepe } from 'react-icons/si';
+import { usePixelTracking } from '../context/PixelContext';
 
 const Checkout = () => {
+  const trackEvent = usePixelTracking();
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const { cartItems, getCartTotal, clearCart } = useCart();
@@ -26,6 +29,7 @@ const Checkout = () => {
   const [upiId, setUpiId] = useState('');
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [showMobileSummary, setShowMobileSummary] = useState(false);
+  const [initiateCheckoutTracked, setInitiateCheckoutTracked] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -43,6 +47,14 @@ const Checkout = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Track InitiateCheckout when checkout page loads
+  useEffect(() => {
+    if (cartItems.length > 0 && !initiateCheckoutTracked && !orderComplete) {
+      trackEvent.initiateCheckout(cartItems, getCartTotal());
+      setInitiateCheckoutTracked(true);
+    }
+  }, [cartItems, trackEvent, initiateCheckoutTracked, orderComplete, getCartTotal]);
 
   // Handle window resize
   useEffect(() => {
@@ -125,6 +137,10 @@ const Checkout = () => {
       const newOrderId = 'ORD' + Math.random().toString(36).substring(2, 10).toUpperCase();
       setOrderId(newOrderId);
       setOrderComplete(true);
+      
+      // Track Purchase event
+      trackEvent.purchase(newOrderId, total, cartItems);
+      
       clearCart();
       setProcessing(false);
     }, 2000);
@@ -155,7 +171,7 @@ const Checkout = () => {
     }, 1500);
   };
 
-  // Function to handle QR code upload - SINGLE DECLARATION
+  // Function to handle QR code upload
   const handleQrUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -789,6 +805,15 @@ const Checkout = () => {
   if (orderComplete) {
     return (
       <div style={themeStyles.container}>
+        {/* SEO for order confirmation page */}
+        <SEO 
+          title="Order Confirmed"
+          description="Your order has been placed successfully at Neckline Cosmetic."
+          keywords="order confirmation, purchase success, order placed"
+          url="/checkout/success"
+          type="website"
+        />
+        
         <div style={themeStyles.orderComplete}>
           <FaCheckCircle style={themeStyles.successIcon} />
           <h2 style={{ fontSize: windowWidth <= 480 ? '1.5rem' : '2rem', marginBottom: '0.75rem' }}>
@@ -820,6 +845,15 @@ const Checkout = () => {
 
   return (
     <div style={themeStyles.container}>
+      {/* SEO for checkout page */}
+      <SEO 
+        title="Checkout"
+        description="Secure checkout at Neckline Cosmetic. Complete your purchase safely with multiple payment options."
+        keywords="checkout, payment, secure checkout, buy cosmetics"
+        url="/checkout"
+        type="website"
+      />
+      
       {/* Header */}
       <div style={themeStyles.header}>
         <Link to="/cart" style={themeStyles.backButton}>
